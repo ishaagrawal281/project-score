@@ -20,3 +20,8 @@
 * **Standup format we'll use:** Yesterday / Today / Blockers (each person)
 * **Primary team channel:** WhatsApp group
 * **One thing our team commits to this sprint:** We will submit our own PR everyday. We will not let any blocker sit for more than one day.
+
+## Next Steps
+
+* Project Scaffolding
+* Defining User Personas
