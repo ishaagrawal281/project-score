@@ -29,3 +29,11 @@
 
 - Project Scaffolding
 - Defining User Personas
+
+## Progress Update
+
+Frontend Setup
+
+- Created the frontend/ folder to house the React application.
+- Implemented the Login Screen as the first user interface of the Document Vault.
+- Established the initial frontend structure for future feature development.
