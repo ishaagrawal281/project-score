@@ -1,1 +1,7 @@
 .env
+
+# === Server Folder ===
+server/
+
+# === Node Modules ===
+node_modules/
