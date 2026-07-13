@@ -79,12 +79,13 @@ This project is built using a modern full-stack web architecture:
 
 # Google Cloud Storage Configuration
 
-When deploying to production or staging with Google Cloud Storage:
-1. Create a GCP bucket and a service account key JSON file.
-2. Add these variables to your [backend/.env](file:///c:/Users/GAURI/Vault/S116-0726-wipcube-tgnm-digilocker-vault/backend/.env):
-   ```ini
-   GCS_PROJECT_ID=your-gcp-project-id
-   GCS_BUCKET_NAME=your-gcs-bucket-name
-   GCS_KEY_FILE=path/to/your/gcs-key-file.json
-   ```
-3. Restart the backend server. The backend will detect these keys and automatically switch from local uploads to secure Google Cloud Storage bucket streaming!
+- Project Scaffolding
+- Defining User Personas
+
+## Progress Update
+
+Frontend Setup
+
+- Created the frontend/ folder to house the React application.
+- Implemented the Login Screen as the first user interface of the Document Vault.
+- Established the initial frontend structure for future feature development.
