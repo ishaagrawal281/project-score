@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useMemo, useEffect } from 'react';
 import { SessionProvider, useSession, signIn, signOut } from 'next-auth/react';
-import api from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -65,7 +64,6 @@ const InternalProvider = ({ children }) => {
 
   useEffect(() => {
     if (session?.accessToken) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${session.accessToken}`;
       try {
         // Keep legacy clients that read localStorage working, but avoid storing in production by default
         if (process.env.NODE_ENV !== 'production') {
@@ -75,7 +73,6 @@ const InternalProvider = ({ children }) => {
         // ignore
       }
     } else {
-      delete api.defaults.headers.common['Authorization'];
       try { localStorage.removeItem('token'); } catch (e) {}
     }
   }, [session]);

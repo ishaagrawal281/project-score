@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Folder, AlertTriangle } from 'lucide-react';
-import api from '../services/api';
 
 const MoveModal = ({ isOpen, onClose, doc, folders = [], onMoveSuccess }) => {
   const [targetFolderId, setTargetFolderId] = useState('');
@@ -34,12 +33,21 @@ const MoveModal = ({ isOpen, onClose, doc, folders = [], onMoveSuccess }) => {
     setErrorMsg('');
 
     try {
-      await api.put(`/documents/${doc.id}/move`, { folderId: parseInt(targetFolderId, 10) });
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/documents/${doc.id}/move`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderId: parseInt(targetFolderId, 10) })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to move document');
+      }
       onMoveSuccess();
       onClose();
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.response?.data?.error || 'Failed to move document to the target folder.');
+      setErrorMsg(err.message || 'Failed to move document to the target folder.');
     } finally {
       setLoading(false);
     }
