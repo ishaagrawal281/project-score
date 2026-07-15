@@ -9,6 +9,9 @@ RUN npm install --production=false
 # Copy source
 COPY . .
 
+# Generate Prisma client (DATABASE_URL not needed for schema generation)
+RUN npx prisma generate
+
 EXPOSE 5000
 
 # Start the application
