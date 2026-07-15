@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { X, Clipboard, Check, AlertTriangle } from 'lucide-react';
-import api from '../services/api';
 
 const ShareModal = ({ isOpen, onClose, doc }) => {
   const [expiry, setExpiry] = useState('24h');
@@ -18,14 +17,24 @@ const ShareModal = ({ isOpen, onClose, doc }) => {
     setErrorMsg('');
     setShareLink('');
     try {
-      const res = await api.post(`/share/${doc.id}`, { expiry });
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/share/${doc.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expiry })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to generate share link');
+      }
+      const data = await res.json();
       
       // Build the absolute frontend shared document URL
-      const absoluteUrl = `${window.location.origin}${res.data.sharePath}`;
+      const absoluteUrl = `${window.location.origin}${data.sharePath}`;
       setShareLink(absoluteUrl);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.response?.data?.error || 'Failed to generate share link.');
+      setErrorMsg(err.message || 'Failed to generate share link.');
     } finally {
       setLoading(false);
     }

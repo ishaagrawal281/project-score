@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from 'react';
 import { X, UploadCloud, File, AlertTriangle, CheckCircle } from 'lucide-react';
-import api from '../services/api';
 import UploadProgress from './UploadProgress';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.docx'];
@@ -111,27 +110,47 @@ const UploadModal = ({ isOpen, onClose, folders = [], currentFolderId, onUploadS
     formData.append('folderId', targetFolderId);
 
     try {
-      const res = await api.post('/documents/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const xhr = new XMLHttpRequest();
+
+      // Track upload progress
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded * 100) / e.total);
           setUploadProgress(percent);
         }
       });
 
-      setSuccessMsg(res.data.message || 'File uploaded successfully.');
-      setSelectedFile(null);
-      
-      // Delay closing to let the user see the success message
-      setTimeout(() => {
-        onUploadSuccess();
-        handleClose();
-      }, 1500);
+      // Handle completion
+      await new Promise((resolve, reject) => {
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const data = JSON.parse(xhr.responseText);
+            setSuccessMsg(data.message || 'File uploaded successfully.');
+            setSelectedFile(null);
+            
+            // Delay closing to let the user see the success message
+            setTimeout(() => {
+              onUploadSuccess();
+              handleClose();
+            }, 1500);
+            resolve();
+          } else {
+            const data = JSON.parse(xhr.responseText);
+            reject(new Error(data.error || 'Upload failed'));
+          }
+        });
+
+        xhr.addEventListener('error', () => {
+          reject(new Error('Upload failed'));
+        });
+
+        xhr.open('POST', `${BACKEND}/api/documents/upload`);
+        xhr.send(formData);
+      });
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.response?.data?.error || 'Failed to upload document. Please try again.');
+      setErrorMsg(err.message || 'Failed to upload document. Please try again.');
       setIsUploading(false);
     }
   };

@@ -14,7 +14,6 @@ import ShareModal from '../../components/ShareModal';
 import MoveModal from '../../components/MoveModal';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { AlertCircle, FileQuestion, FolderOpen, ArrowUpRight, CheckCircle } from 'lucide-react';
-import api from '../../services/api';
 
 const DashboardContent = () => {
   const searchParams = useSearchParams();
@@ -49,12 +48,15 @@ const DashboardContent = () => {
     setFoldersLoading(true);
     setActionError('');
     try {
-      const res = await api.get('/folders');
-      setFolders(res.data.folders);
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/folders`);
+      if (!res.ok) throw new Error('Failed to fetch folders');
+      const data = await res.json();
+      setFolders(data.folders);
       
       // If we don't have a currentFolderId, find the root folder "My Documents" (parentId === null)
-      if (currentFolderId === null && res.data.folders.length > 0) {
-        const root = res.data.folders.find(f => f.parentId === null);
+      if (currentFolderId === null && data.folders.length > 0) {
+        const root = data.folders.find(f => f.parentId === null);
         if (root) {
           setCurrentFolderId(root.id);
         }
@@ -78,7 +80,8 @@ const DashboardContent = () => {
     setActionError('');
 
     try {
-      let url = `/documents?page=${pageNum}&limit=20`;
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      let url = `${BACKEND}/api/documents?page=${pageNum}&limit=20`;
       
       if (searchQuery) {
         // Global search overrides active folder ID
@@ -91,8 +94,10 @@ const DashboardContent = () => {
         return;
       }
 
-      const res = await api.get(url);
-      const newDocs = res.data.documents;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch documents');
+      const data = await res.json();
+      const newDocs = data.documents;
 
       if (append) {
         setDocuments(prev => [...prev, ...newDocs]);
@@ -100,7 +105,7 @@ const DashboardContent = () => {
         setDocuments(newDocs);
       }
 
-      setHasMore(res.data.pagination.hasMore);
+      setHasMore(data.pagination.hasMore);
     } catch (err) {
       console.error(err);
       setActionError('Failed to fetch documents list.');
@@ -178,14 +183,20 @@ const DashboardContent = () => {
     if (!name || name.trim() === '') return;
 
     try {
-      await api.post('/folders', {
-        name: name.trim(),
-        parentId: currentFolderId
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/folders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          parentId: currentFolderId
+        })
       });
+      if (!res.ok) throw new Error('Failed to create folder');
       showSuccess('Folder created successfully.');
       fetchFolders();
     } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to create folder.');
+      setActionError(err.message || 'Failed to create folder.');
     }
   };
 
@@ -194,11 +205,17 @@ const DashboardContent = () => {
     if (!newName || newName.trim() === '' || newName.trim() === folder.name) return;
 
     try {
-      await api.put(`/folders/${folder.id}`, { name: newName.trim() });
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/folders/${folder.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (!res.ok) throw new Error('Failed to rename folder');
       showSuccess('Folder renamed successfully.');
       fetchFolders();
     } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to rename folder.');
+      setActionError(err.message || 'Failed to rename folder.');
     }
   };
 
@@ -206,11 +223,15 @@ const DashboardContent = () => {
     if (!window.confirm(`Are you sure you want to delete folder "${folder.name}"?`)) return;
 
     try {
-      await api.delete(`/folders/${folder.id}`);
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/folders/${folder.id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete folder');
       showSuccess('Folder deleted successfully.');
       fetchFolders();
     } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to delete folder.');
+      setActionError(err.message || 'Failed to delete folder.');
     }
   };
 
@@ -218,12 +239,16 @@ const DashboardContent = () => {
     if (!window.confirm(`Are you sure you want to delete "${doc.filename}"? This action is permanent.`)) return;
 
     try {
-      await api.delete(`/documents/${doc.id}`);
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${BACKEND}/api/documents/${doc.id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error('Failed to delete document');
       showSuccess('Document deleted successfully.');
       // Refresh current document list
       fetchDocuments(1, false);
     } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to delete document.');
+      setActionError(err.message || 'Failed to delete document.');
     }
   };
 

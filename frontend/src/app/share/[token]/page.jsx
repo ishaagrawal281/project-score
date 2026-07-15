@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Download, AlertCircle, HardDrive, FileText, FileImage, File, Clock } from 'lucide-react';
-import api from '../../../services/api';
 import { formatBytes, getAbsoluteFileUrl } from '../../../components/DocumentCard';
 
 const SharedDocument = () => {
@@ -18,14 +17,18 @@ const SharedDocument = () => {
     const fetchSharedDoc = async () => {
       if (!token) return;
       try {
-        const res = await api.get(`/share/${token}`);
-        setDoc(res.data.document);
-        setExpiresAt(res.data.expiresAt);
+        const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+        const res = await fetch(`${BACKEND}/api/share/${token}`);
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'This shared link is invalid or has expired.');
+        }
+        const data = await res.json();
+        setDoc(data.document);
+        setExpiresAt(data.expiresAt);
       } catch (err) {
         console.error(err);
-        setErrorMsg(
-          err.response?.data?.error || 'This shared link is invalid or has expired.'
-        );
+        setErrorMsg(err.message || 'This shared link is invalid or has expired.');
       } finally {
         setLoading(false);
       }
