@@ -9,9 +9,6 @@ RUN npm install --production=false
 # Copy source
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
 EXPOSE 5000
 
 # Start the application
