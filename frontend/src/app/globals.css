@@ -491,6 +491,12 @@ button, input, select, textarea {
   transform: translateY(-2px);
 }
 
+/* A transformed card creates its own stacking context. Raise the card while
+   its menu is open so neighboring cards cannot paint over the dropdown. */
+.folder-card-menu-open {
+  z-index: 10;
+}
+
 .folder-info {
   display: flex;
   align-items: center;
@@ -1192,7 +1198,7 @@ button, input, select, textarea {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;

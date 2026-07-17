@@ -22,7 +22,7 @@ const FolderCard = ({ folder, onOpen, onRename, onDelete }) => {
 
   return (
     <div 
-      className="folder-card"
+      className={`folder-card${showDropdown ? ' folder-card-menu-open' : ''}`}
       onDoubleClick={() => onOpen(folder)}
       style={{ position: 'relative' }}
     >
