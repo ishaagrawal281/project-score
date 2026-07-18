@@ -2,19 +2,30 @@
 
 import React, { createContext, useContext, useMemo, useEffect } from 'react';
 import { SessionProvider, useSession, signIn, signOut } from 'next-auth/react';
+import FetchInterceptor from '../components/FetchInterceptor';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   return (
     <SessionProvider refetchInterval={5 * 60} session-maxAge={30 * 24 * 60 * 60}>
-      <InternalProvider>{children}</InternalProvider>
+      <FetchInterceptor>
+        <InternalProvider>{children}</InternalProvider>
+      </FetchInterceptor>
     </SessionProvider>
   );
 };
 
 const InternalProvider = ({ children }) => {
   const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (session?.accessToken) {
+      console.log('Session loaded with accessToken:', session.accessToken.substring(0, 20) + '...');
+    } else if (status !== 'loading') {
+      console.log('Session status:', status, 'Token:', session?.accessToken ? 'Present' : 'Missing');
+    }
+  }, [session, status]);
 
   const value = useMemo(() => {
     return {
@@ -68,12 +79,16 @@ const InternalProvider = ({ children }) => {
         // Keep legacy clients that read localStorage working, but avoid storing in production by default
         if (process.env.NODE_ENV !== 'production') {
           localStorage.setItem('token', session.accessToken);
+          console.log('[AuthContext] Token saved to localStorage');
         }
       } catch (e) {
-        // ignore
+        console.log('[AuthContext] Failed to save token to localStorage:', e.message);
       }
     } else {
-      try { localStorage.removeItem('token'); } catch (e) {}
+      try { 
+        localStorage.removeItem('token');
+        console.log('[AuthContext] Token removed from localStorage');
+      } catch (e) {}
     }
   }, [session]);
 

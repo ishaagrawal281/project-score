@@ -8,7 +8,7 @@ const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.docx'];
 const REJECTED_EXTENSIONS = ['.exe', '.zip', '.apk', '.bat', '.js'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-const UploadModal = ({ isOpen, onClose, folders = [], currentFolderId, onUploadSuccess }) => {
+const UploadModal = ({ isOpen, onClose, folders = [], currentFolderId, onUploadSuccess, token }) => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [targetFolderId, setTargetFolderId] = useState(currentFolderId || (folders[0]?.id || ''));
@@ -100,6 +100,11 @@ const UploadModal = ({ isOpen, onClose, folders = [], currentFolderId, onUploadS
       return;
     }
 
+    if (!token) {
+      setErrorMsg('Your session is not ready. Please refresh the page or sign in again.');
+      return;
+    }
+
     setIsUploading(true);
     setUploadProgress(0);
     setErrorMsg('');
@@ -146,6 +151,9 @@ const UploadModal = ({ isOpen, onClose, folders = [], currentFolderId, onUploadS
         });
 
         xhr.open('POST', `${BACKEND}/api/documents/upload`);
+        // XMLHttpRequest does not use FetchInterceptor, so its auth header
+        // must be supplied explicitly.
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         xhr.send(formData);
       });
     } catch (err) {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -16,6 +17,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import { AlertCircle, FileQuestion, FolderOpen, ArrowUpRight, CheckCircle } from 'lucide-react';
 
 const DashboardContent = () => {
+  const { token } = useAuth();
   const searchParams = useSearchParams();
   const searchQuery = searchParams?.get('search') || '';
 
@@ -179,7 +181,10 @@ const DashboardContent = () => {
 
   // 5. Folder CRUD & Document Actions
   const handleNewFolder = async () => {
-    const name = window.prompt('Enter folder name:');
+    // GlobalPromptHandler provides a Promise-backed modal implementation of
+    // window.prompt, while the native browser prompt returns a string. Awaiting
+    // works with both implementations and ensures we only use the submitted name.
+    const name = await window.prompt('Enter folder name:');
     if (!name || name.trim() === '') return;
 
     try {
@@ -201,7 +206,7 @@ const DashboardContent = () => {
   };
 
   const handleRenameFolder = async (folder) => {
-    const newName = window.prompt('Enter new name for folder:', folder.name);
+    const newName = await window.prompt('Enter new name for folder:', folder.name);
     if (!newName || newName.trim() === '' || newName.trim() === folder.name) return;
 
     try {
@@ -370,6 +375,7 @@ const DashboardContent = () => {
         onClose={() => setIsUploadOpen(false)}
         folders={folders}
         currentFolderId={currentFolderId}
+        token={token}
         onUploadSuccess={() => {
           showSuccess('Upload successful.');
           fetchDocuments(1, false);
