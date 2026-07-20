@@ -1,4 +1,4 @@
-import { withAuth } from 'next-auth/middleware';
+import { withAuth, NextAuthMiddlewareError } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const middleware = withAuth(
@@ -26,9 +26,9 @@ export const middleware = withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => {
-        // Allow access to public pages even without token
-        // Auth check is handled in the middleware function above
+      authorized: ({ token, req }) => {
+        // Allow all requests - auth check is handled in the middleware function
+        // This just ensures NextAuth middleware runs
         return true;
       }
     },
