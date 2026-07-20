@@ -28,8 +28,13 @@ export const middleware = withAuth(
     callbacks: {
       authorized: ({ token }) => {
         // Allow access to public pages even without token
+        // Auth check is handled in the middleware function above
         return true;
       }
+    },
+    pages: {
+      signIn: '/login',
+      error: '/login'
     }
   }
 );

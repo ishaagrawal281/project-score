@@ -76,11 +76,9 @@ const InternalProvider = ({ children }) => {
   useEffect(() => {
     if (session?.accessToken) {
       try {
-        // Keep legacy clients that read localStorage working, but avoid storing in production by default
-        if (process.env.NODE_ENV !== 'production') {
-          localStorage.setItem('token', session.accessToken);
-          console.log('[AuthContext] Token saved to localStorage');
-        }
+        // Always save token to localStorage for client-side access
+        localStorage.setItem('token', session.accessToken);
+        console.log('[AuthContext] Token saved to localStorage');
       } catch (e) {
         console.log('[AuthContext] Failed to save token to localStorage:', e.message);
       }

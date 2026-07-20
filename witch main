@@ -1,0 +1,11 @@
+  br/backend[m
+  feature/frontend-auth-layout[m
+  feature/frontend-initial-setup[m
+  fix/node-version-dockerfile[m
+* [32mfix/prisma-build-deploy[m
+  frontend-implementation[m
+  frontend-only[m
+  frontend-setup[m
+  main[m
+  setup-backend[m
+  setup-frontend[m
