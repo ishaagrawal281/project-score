@@ -7,7 +7,7 @@ export const middleware = withAuth(
     const token = request.nextauth.token;
 
     // If user is authenticated (has token)
-    if (token) {
+    if (token?.accessToken) {
       // Redirect away from login/register pages to dashboard
       if (pathname === '/login' || pathname === '/register') {
         return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -15,7 +15,7 @@ export const middleware = withAuth(
     }
 
     // If user is not authenticated
-    if (!token) {
+    if (!token?.accessToken) {
       // Redirect to login if accessing protected routes
       if (pathname === '/dashboard' || pathname.startsWith('/share')) {
         return NextResponse.redirect(new URL('/login', request.url));

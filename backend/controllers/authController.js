@@ -1,7 +1,21 @@
 const User = require('../models/User');
 const Folder = require('../models/Folder');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { generateJwt } = require('../utils/token');
+
+const createDefaultFolders = async (userId) => {
+  const rootFolder = await Folder.create({
+    userId,
+    parentId: null,
+    name: 'My Documents'
+  });
+
+  const subfolderNames = ['Identity', 'Education', 'Finance', 'Employment', 'Medical', 'Others'];
+  for (const name of subfolderNames) {
+    await Folder.create({ userId, parentId: rootFolder.id, name });
+  }
+};
 
 /**
  * Handle user registration (Signup).
@@ -34,23 +48,7 @@ const signup = async (req, res, next) => {
       password: hashedPassword
     });
 
-    // Create Default DigiLocker folder structure
-    // 1. Create root "My Documents" folder
-    const rootFolder = await Folder.create({
-      userId: newUser.id,
-      parentId: null,
-      name: 'My Documents'
-    });
-
-    // 2. Create subfolders under "My Documents"
-    const subfolderNames = ['Identity', 'Education', 'Finance', 'Employment', 'Medical', 'Others'];
-    for (const name of subfolderNames) {
-      await Folder.create({
-        userId: newUser.id,
-        parentId: rootFolder.id,
-        name: name
-      });
-    }
+    await createDefaultFolders(newUser.id);
 
     // Generate session JWT token
     const token = generateJwt({
@@ -67,6 +65,73 @@ const signup = async (req, res, next) => {
         name: newUser.name,
         email: newUser.email
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify a Google ID token, then create or link the matching local account.
+ * The token is verified by Google before any user data is trusted.
+ */
+const googleLogin = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ error: 'Google ID token is required.' });
+    }
+
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`
+    );
+    if (!response.ok) {
+      return res.status(401).json({ error: 'Google authentication could not be verified.' });
+    }
+
+    const profile = await response.json();
+    if (
+      profile.aud !== process.env.GOOGLE_CLIENT_ID ||
+      profile.email_verified !== 'true' ||
+      !profile.email ||
+      !profile.sub
+    ) {
+      return res.status(401).json({ error: 'Invalid Google account information.' });
+    }
+
+    const name = profile.name || profile.email.split('@')[0];
+    const image = profile.picture || null;
+    let user = await User.findByGoogleId(profile.sub);
+
+    if (user) {
+      user = await User.updateGoogleProfile(user.id, { name, image });
+    } else {
+      const existingUser = await User.findByEmail(profile.email);
+      if (existingUser) {
+        user = await User.linkGoogleAccount(existingUser.id, {
+          name,
+          image,
+          googleId: profile.sub
+        });
+      } else {
+        const generatedPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+        user = await User.create({
+          name,
+          email: profile.email,
+          password: generatedPassword,
+          image,
+          provider: 'google',
+          googleId: profile.sub
+        });
+        await createDefaultFolders(user.id);
+      }
+    }
+
+    const token = generateJwt({ id: user.id, name: user.name, email: user.email });
+    return res.status(200).json({
+      message: 'Google login successful.',
+      token,
+      user
     });
   } catch (error) {
     next(error);
@@ -135,5 +200,6 @@ const getProfile = async (req, res, next) => {
 module.exports = {
   signup,
   login,
+  googleLogin,
   getProfile
 };
