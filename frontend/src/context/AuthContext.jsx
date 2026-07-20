@@ -44,31 +44,59 @@ const InternalProvider = ({ children }) => {
       },
       signup: async (name, email, password, backendUrl = undefined) => {
         const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5000';
-        const res = await fetch(`${BACKEND}/api/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        try {
+          const res = await fetch(`${BACKEND}/api/signup`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ name, email, password }),
+            credentials: 'include'
+          });
+          
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || `Registration failed (${res.status})`);
+          }
+          
+          const data = await res.json();
 
-        // Sign in right after successful registration
-        await signIn('credentials', { redirect: false, email, password });
-        return data;
+          // Sign in right after successful registration
+          await signIn('credentials', { redirect: false, email, password });
+          return data;
+        } catch (error) {
+          console.error('[AuthContext] Signup error:', error);
+          throw error;
+        }
       },
       register: async (name, email, password, backendUrl = undefined) => {
         const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || 'http://localhost:5000';
-        const res = await fetch(`${BACKEND}/api/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        try {
+          const res = await fetch(`${BACKEND}/api/signup`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ name, email, password }),
+            credentials: 'include'
+          });
+          
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || `Registration failed (${res.status})`);
+          }
+          
+          const data = await res.json();
 
-        // Sign in right after successful registration
-        await signIn('credentials', { redirect: false, email, password });
-        return data;
+          // Sign in right after successful registration
+          await signIn('credentials', { redirect: false, email, password });
+          return data;
+        } catch (error) {
+          console.error('[AuthContext] Register error:', error);
+          throw error;
+        }
       }
     };
   }, [session, status]);
