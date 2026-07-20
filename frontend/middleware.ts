@@ -1,4 +1,4 @@
-import { withAuth, NextAuthMiddlewareError } from 'next-auth/middleware';
+import { withAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const middleware = withAuth(
@@ -28,7 +28,6 @@ export const middleware = withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         // Allow all requests - auth check is handled in the middleware function
-        // This just ensures NextAuth middleware runs
         return true;
       }
     },
