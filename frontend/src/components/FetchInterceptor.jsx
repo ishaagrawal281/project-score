@@ -12,7 +12,7 @@ const FetchInterceptor = ({ children }) => {
     const originalFetch = window.fetch;
 
     // Create an intercepted fetch function
-    window.fetch = function(...args) {
+    window.fetch = async function(...args) {
       const [resource, config = {}] = args;
       
       // Clone the config to avoid mutating the original
@@ -22,7 +22,7 @@ const FetchInterceptor = ({ children }) => {
       const url = typeof resource === 'string' ? resource : resource.url;
       
       // Add authorization header if it's an API call
-      if (url && (url.includes('/api/') || url.includes('localhost:5000'))) {
+      if (url && (url.includes('/api/') || url.includes('localhost:5000') || url.includes('onrender.com'))) {
         let token = null;
         
         // First try to get token from session
@@ -42,8 +42,21 @@ const FetchInterceptor = ({ children }) => {
         }
       }
 
-      // Call the original fetch with the modified config
-      return originalFetch(resource, newConfig);
+      try {
+        // Call the original fetch with the modified config
+        const response = await originalFetch(resource, newConfig);
+        
+        // Handle unauthorized responses
+        if (response.status === 401) {
+          console.warn('[FetchInterceptor] Unauthorized request, token may be expired');
+          // Token is likely expired, let NextAuth handle the refresh
+        }
+        
+        return response;
+      } catch (error) {
+        console.error('[FetchInterceptor] Fetch error:', error);
+        throw error;
+      }
     };
 
     // Cleanup: restore original fetch on unmount

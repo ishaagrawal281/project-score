@@ -56,6 +56,31 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check route with database connectivity
+app.get('/health', async (req, res) => {
+  try {
+    const prisma = require('./config/db');
+    
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    
+    res.status(200).json({
+      status: 'healthy',
+      message: 'Service and database are operational',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    console.error('Health check failed:', error.message);
+    res.status(503).json({
+      status: 'unhealthy',
+      message: 'Service or database is unavailable',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Centralized Error Middleware (Must be registered last)
 app.use(errorMiddleware);
 
