@@ -4,7 +4,7 @@ import React, { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
-import { useSession } from 'next-auth/react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { HardDrive, AlertTriangle, Loader } from 'lucide-react';
 
 const LoginContent = () => {
@@ -15,17 +15,26 @@ const LoginContent = () => {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState(
-    searchParams?.get('expired') ? 'Your session has expired. Please sign in again.' : ''
-  );
+  const [errorMsg, setErrorMsg] = useState(() => {
+    if (searchParams?.get('expired')) return 'Your session has expired. Please sign in again.';
+    if (searchParams?.get('error')) return 'Google sign-in was cancelled or could not be completed. Please try again.';
+    return '';
+  });
   const [loading, setLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (status === 'authenticated' && session) {
+    if (status === 'authenticated' && session?.accessToken) {
       router.push('/dashboard');
     }
   }, [status, session, router]);
+
+  useEffect(() => {
+    if (session?.error === 'GoogleAccountLinkingFailed') {
+      setErrorMsg('We could not finish setting up your Google account. Please try again.');
+      signOut({ redirect: false });
+    }
+  }, [session]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +57,12 @@ const LoginContent = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    await signIn('google', { callbackUrl: '/dashboard' });
+  };
+
   // Show loading while checking auth status
   if (status === 'loading') {
     return (
@@ -60,7 +75,7 @@ const LoginContent = () => {
   }
 
   // Don't render form if already authenticated (redirect will happen)
-  if (status === 'authenticated') {
+  if (status === 'authenticated' && session?.accessToken) {
     return null;
   }
 
@@ -118,6 +133,16 @@ const LoginContent = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <button
+          type="button"
+          className="btn btn-secondary btn-full"
+          style={{ marginTop: '12px' }}
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
+          Continue with Google
+        </button>
 
         <div className="auth-footer">
           Don't have an account?{' '}
