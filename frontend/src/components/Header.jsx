@@ -1,12 +1,12 @@
 "use client";
 
 import React from 'react';
-import { UploadCloud, FolderPlus, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 /**
- * Renders Breadcrumbs navigation paths and action triggers for folder/file additions.
+ * Renders the active dashboard view title and optional breadcrumb navigation.
  */
-const Header = ({ breadcrumbs = [], onNavigate, onUpload, onNewFolder }) => {
+const Header = ({ breadcrumbs = [], onNavigate }) => {
   return (
     <header className="main-header">
       <div className="breadcrumbs">
@@ -31,21 +31,6 @@ const Header = ({ breadcrumbs = [], onNavigate, onUpload, onNewFolder }) => {
             </React.Fragment>
           );
         })}
-      </div>
-
-      <div className="header-actions">
-        {onNewFolder && (
-          <button className="btn btn-secondary" onClick={onNewFolder}>
-            <FolderPlus size={16} />
-            <span>New Folder</span>
-          </button>
-        )}
-        {onUpload && (
-          <button className="btn btn-primary" onClick={onUpload}>
-            <UploadCloud size={16} />
-            <span>Upload File</span>
-          </button>
-        )}
       </div>
     </header>
   );

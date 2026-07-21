@@ -1,20 +1,32 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
-import FolderCard from '../../components/FolderCard';
+import DocumentCard, { formatBytes } from '../../components/DocumentCard';
 import DocumentList from '../../components/DocumentList';
 import DocumentViewer from '../../components/DocumentViewer';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import UploadModal from '../../components/UploadModal';
 import ShareModal from '../../components/ShareModal';
 import MoveModal from '../../components/MoveModal';
+import ConfirmModal from '../../components/ConfirmModal';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import { AlertCircle, FileQuestion, FolderOpen, ArrowUpRight, CheckCircle } from 'lucide-react';
+import { 
+  AlertCircle, 
+  FileQuestion, 
+  FolderOpen, 
+  FolderPlus, 
+  UploadCloud, 
+  CheckCircle, 
+  HardDrive, 
+  LayoutGrid, 
+  List,
+  Clock
+} from 'lucide-react';
 
 const DashboardContent = () => {
   const { token } = useAuth();
@@ -25,6 +37,7 @@ const DashboardContent = () => {
   const [folders, setFolders] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   
   // Pagination & Loading state
   const [page, setPage] = useState(1);
@@ -37,9 +50,9 @@ const DashboardContent = () => {
   const [selectedShareDoc, setSelectedShareDoc] = useState(null);
   const [selectedMoveDoc, setSelectedMoveDoc] = useState(null);
   const [selectedViewerDoc, setSelectedViewerDoc] = useState(null);
+  const [deleteDocTarget, setDeleteDocTarget] = useState(null);
+  const [deleteFolderTarget, setDeleteFolderTarget] = useState(null);
   
-  // Layout toggles
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
@@ -51,21 +64,23 @@ const DashboardContent = () => {
     setActionError('');
     try {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
-      const res = await fetch(`${BACKEND}/api/folders`);
-      if (!res.ok) throw new Error('Failed to fetch folders');
-      const data = await res.json();
-      setFolders(data.folders);
-      
-      // If we don't have a currentFolderId, find the root folder "My Documents" (parentId === null)
-      if (currentFolderId === null && data.folders.length > 0) {
-        const root = data.folders.find(f => f.parentId === null);
-        if (root) {
-          setCurrentFolderId(root.id);
-        }
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      const res = await fetch(`${BACKEND}/api/folders`, {
+        headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+      });
+      if (res.status === 401) {
+        window.location.href = '/login?expired=true';
+        return;
       }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to fetch folders');
+      }
+      const data = await res.json();
+      setFolders(data.folders || []);
     } catch (err) {
       console.error(err);
-      setActionError('Failed to load folders directories.');
+      setActionError(err.message || 'Failed to load folders directories.');
     } finally {
       setFoldersLoading(false);
     }
@@ -73,9 +88,9 @@ const DashboardContent = () => {
 
   useEffect(() => {
     fetchFolders();
-  }, []);
+  }, [token]);
 
-  // 2. Fetch documents (triggered on folder change, page change, search query change)
+  // 2. Fetch documents
   const fetchDocuments = async (pageNum, append = false) => {
     if (docsLoading) return;
     setDocsLoading(true);
@@ -86,20 +101,28 @@ const DashboardContent = () => {
       let url = `${BACKEND}/api/documents?page=${pageNum}&limit=20`;
       
       if (searchQuery) {
-        // Global search overrides active folder ID
         url += `&search=${encodeURIComponent(searchQuery)}`;
       } else if (currentFolderId) {
         url += `&folderId=${currentFolderId}`;
-      } else {
-        // If neither, wait until folder hierarchy is resolved
-        setDocsLoading(false);
+      }
+
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      const res = await fetch(url, {
+        headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+      });
+
+      if (res.status === 401) {
+        window.location.href = '/login?expired=true';
         return;
       }
 
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch documents');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to fetch documents');
+      }
+
       const data = await res.json();
-      const newDocs = data.documents;
+      const newDocs = data.documents || [];
 
       if (append) {
         setDocuments(prev => [...prev, ...newDocs]);
@@ -107,29 +130,27 @@ const DashboardContent = () => {
         setDocuments(newDocs);
       }
 
-      setHasMore(data.pagination.hasMore);
+      setHasMore(data.pagination?.hasMore || false);
     } catch (err) {
       console.error(err);
-      setActionError('Failed to fetch documents list.');
+      setActionError(err.message || 'Failed to fetch documents list.');
     } finally {
       setDocsLoading(false);
     }
   };
 
-  // Reset page and documents list whenever folder or search query changes
   useEffect(() => {
     setPage(1);
     fetchDocuments(1, false);
   }, [currentFolderId, searchQuery]);
 
-  // Load next page when pagination page index increments
   useEffect(() => {
     if (page > 1) {
       fetchDocuments(page, true);
     }
   }, [page]);
 
-  // 3. Intersection Observer for Infinite Scroll
+  // Infinite scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -152,52 +173,53 @@ const DashboardContent = () => {
     };
   }, [hasMore, docsLoading]);
 
-  // 4. Breadcrumbs trace
+  // Breadcrumbs trace
   const getBreadcrumbs = () => {
     if (searchQuery) {
       return [{ id: 'search', name: `Search Results for "${searchQuery}"` }];
     }
 
-    if (!currentFolderId || folders.length === 0) {
-      return [{ id: 'root', name: 'My Documents' }];
+    const selectedFolder = folders.find((folder) => folder.id === currentFolderId);
+    if (!selectedFolder) {
+      return [{ id: null, name: 'Recently Viewed Documents' }];
     }
 
-    const path = [];
-    let current = folders.find(f => f.id === currentFolderId);
-    while (current) {
-      path.unshift(current);
-      if (current.parentId === null) break;
-      current = folders.find(f => f.id === current.parentId);
-    }
-    return path;
+    return [
+      { id: null, name: 'All Documents' },
+      selectedFolder
+    ];
   };
 
-  // Filter child folders for current view
-  const getChildFolders = () => {
-    if (searchQuery) return []; // Hide subfolders on search view
-    if (!currentFolderId) return [];
-    return folders.filter(f => f.parentId === currentFolderId);
-  };
+  const rootFolderId = folders.find((folder) => folder.parentId === null)?.id || null;
+  const activeFolder = folders.find((folder) => folder.id === currentFolderId);
+  const uploadFolderId = currentFolderId || rootFolderId;
 
-  // 5. Folder CRUD & Document Actions
+  // Calculate Metrics - Total Storage ONLY
+  const totalSizeBytes = documents.reduce((acc, doc) => acc + (doc.size || 0), 0);
+
+  // Folder CRUD & Document Actions
   const handleNewFolder = async () => {
-    // GlobalPromptHandler provides a Promise-backed modal implementation of
-    // window.prompt, while the native browser prompt returns a string. Awaiting
-    // works with both implementations and ensures we only use the submitted name.
     const name = await window.prompt('Enter folder name:');
     if (!name || name.trim() === '') return;
 
     try {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(`${BACKEND}/api/folders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
           name: name.trim(),
-          parentId: currentFolderId
+          parentId: currentFolderId || rootFolderId
         })
       });
-      if (!res.ok) throw new Error('Failed to create folder');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to create folder');
+      }
       showSuccess('Folder created successfully.');
       fetchFolders();
     } catch (err) {
@@ -211,12 +233,19 @@ const DashboardContent = () => {
 
     try {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(`${BACKEND}/api/folders/${folder.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({ name: newName.trim() })
       });
-      if (!res.ok) throw new Error('Failed to rename folder');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to rename folder');
+      }
       showSuccess('Folder renamed successfully.');
       fetchFolders();
     } catch (err) {
@@ -224,33 +253,57 @@ const DashboardContent = () => {
     }
   };
 
-  const handleDeleteFolder = async (folder) => {
-    if (!window.confirm(`Are you sure you want to delete folder "${folder.name}"?`)) return;
+  const handleDeleteFolder = (folder) => {
+    setDeleteFolderTarget(folder);
+  };
+
+  const executeDeleteFolder = async () => {
+    if (!deleteFolderTarget) return;
+    const folder = deleteFolderTarget;
+    setDeleteFolderTarget(null);
 
     try {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(`${BACKEND}/api/folders/${folder.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
       });
-      if (!res.ok) throw new Error('Failed to delete folder');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to delete folder');
+      }
       showSuccess('Folder deleted successfully.');
       fetchFolders();
+      if (currentFolderId === folder.id) {
+        setCurrentFolderId(null);
+      }
     } catch (err) {
       setActionError(err.message || 'Failed to delete folder.');
     }
   };
 
-  const handleDeleteDocument = async (doc) => {
-    if (!window.confirm(`Are you sure you want to delete "${doc.filename}"? This action is permanent.`)) return;
+  const handleDeleteDocument = (doc) => {
+    setDeleteDocTarget(doc);
+  };
+
+  const executeDeleteDocument = async () => {
+    if (!deleteDocTarget) return;
+    const doc = deleteDocTarget;
+    setDeleteDocTarget(null);
 
     try {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(`${BACKEND}/api/documents/${doc.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
       });
-      if (!res.ok) throw new Error('Failed to delete document');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to delete document');
+      }
       showSuccess('Document deleted successfully.');
-      // Refresh current document list
       fetchDocuments(1, false);
     } catch (err) {
       setActionError(err.message || 'Failed to delete document.');
@@ -264,73 +317,83 @@ const DashboardContent = () => {
 
   return (
     <div className="dashboard-layout">
-      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <Navbar />
       
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar
+        folders={folders}
+        activeFolderId={currentFolderId}
+        onSelectFolder={setCurrentFolderId}
+        onNewFolder={handleNewFolder}
+        onRenameFolder={handleRenameFolder}
+        onDeleteFolder={handleDeleteFolder}
+        loading={foldersLoading}
+      />
       
       <main className="dashboard-main">
         {actionError && (
-          <div className="alert alert-danger" style={{ marginBottom: '20px' }}>
+          <div className="alert alert-danger">
             <AlertCircle size={16} />
             <span>{actionError}</span>
           </div>
         )}
 
         {actionSuccess && (
-          <div className="alert alert-success" style={{ marginBottom: '20px' }}>
-            <CheckCircle size={16} style={{ color: 'var(--success)' }} />
+          <div className="alert alert-success">
+            <CheckCircle size={16} />
             <span>{actionSuccess}</span>
           </div>
         )}
 
+
         {/* Directory Controls and Breadcrumbs */}
-        <Header 
-          breadcrumbs={getBreadcrumbs()} 
-          onNavigate={(id) => setCurrentFolderId(id)}
-          onUpload={searchQuery ? null : () => setIsUploadOpen(true)}
-          onNewFolder={searchQuery ? null : handleNewFolder}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <Header 
+            breadcrumbs={getBreadcrumbs()} 
+            onNavigate={(id) => setCurrentFolderId(id)}
+          />
+        </div>
 
-        {/* Folders List (Hidden during search queries) */}
-        {!searchQuery && (
-          <section style={{ marginBottom: '24px' }}>
-            {getChildFolders().length > 0 && <h3 className="section-title">Folders</h3>}
-            {foldersLoading ? (
-              <SkeletonLoader type="folder" count={3} />
-            ) : (
-              <div className="folders-grid">
-                {getChildFolders().map(folder => (
-                  <FolderCard
-                    key={folder.id}
-                    folder={folder}
-                    onOpen={(f) => setCurrentFolderId(f.id)}
-                    onRename={handleRenameFolder}
-                    onDelete={handleDeleteFolder}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Documents list */}
+        {/* Main Content Area: Recently Viewed Documents / Folder Documents */}
         <section className="documents-section">
-          {documents.length > 0 && <h3 className="section-title">Documents</h3>}
-          
+          <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {currentFolderId === null ? (
+              <>
+                <Clock size={15} style={{ color: 'var(--primary)' }} />
+                <span>Recently Viewed Documents ({documents.length})</span>
+              </>
+            ) : (
+              <span>Folder Documents ({documents.length})</span>
+            )}
+          </div>
+
           {docsLoading && page === 1 ? (
             <div style={{ marginTop: '20px' }}>
               <SkeletonLoader type="card" count={4} />
             </div>
           ) : documents.length > 0 ? (
             <>
-              <DocumentList
-                documents={documents}
-                onShare={(d) => setSelectedShareDoc(d)}
-                onMove={(d) => setSelectedMoveDoc(d)}
-                onDelete={handleDeleteDocument}
-                loading={docsLoading}
-                onDocumentClick={(d) => setSelectedViewerDoc(d)}
-              />
+              {viewMode === 'list' ? (
+                <DocumentList
+                  documents={documents}
+                  onShare={(d) => setSelectedShareDoc(d)}
+                  onMove={(d) => setSelectedMoveDoc(d)}
+                  onDelete={handleDeleteDocument}
+                  loading={docsLoading}
+                  onDocumentClick={(d) => setSelectedViewerDoc(d)}
+                />
+              ) : (
+                <div className="documents-grid">
+                  {documents.map((doc) => (
+                    <DocumentCard 
+                      key={doc.id}
+                      doc={doc}
+                      onShare={(d) => setSelectedShareDoc(d)}
+                      onMove={(d) => setSelectedMoveDoc(d)}
+                      onDelete={handleDeleteDocument}
+                    />
+                  ))}
+                </div>
+              )}
               
               {/* Observer Anchor */}
               {hasMore && (
@@ -339,24 +402,40 @@ const DashboardContent = () => {
                 </div>
               )}
             </>
-          ) : getChildFolders().length === 0 ? (
+          ) : searchQuery ? (
             <div className="empty-state">
-              <FolderOpen size={48} className="empty-state-icon" />
-              <h4 className="empty-state-title">This folder is empty</h4>
-              <p className="empty-state-text">Upload documents or create subfolders to start organizing.</p>
-              <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)}>
-                Upload File
-              </button>
+              <div className="empty-state-icon-wrap">
+                <FileQuestion size={36} />
+              </div>
+              <h4 className="empty-state-title">No matching records found</h4>
+              <p className="empty-state-text">We couldn't find any documents matching "{searchQuery}".</p>
             </div>
           ) : (
             <div className="empty-state">
-              <FileQuestion size={48} className="empty-state-icon" />
-              <h4 className="empty-state-title">No search results found</h4>
-              <p className="empty-state-text">We couldn't find any documents matching "{searchQuery}".</p>
+              <div className="empty-state-icon-wrap">
+                <FolderOpen size={36} />
+              </div>
+              <h4 className="empty-state-title">{activeFolder ? `Folder "${activeFolder.name}" is empty` : 'No recently viewed documents'}</h4>
+              <p className="empty-state-text">{activeFolder ? 'Upload documents to start populating this folder.' : 'Upload your documents to see them listed here.'}</p>
+              <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)}>
+                <UploadCloud size={16} />
+                <span>Upload Document</span>
+              </button>
             </div>
           )}
         </section>
       </main>
+
+      <div className="dashboard-fixed-actions">
+        <button className="btn btn-secondary" onClick={handleNewFolder}>
+          <FolderPlus size={16} />
+          <span>New Folder</span>
+        </button>
+        <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)} disabled={!uploadFolderId}>
+          <UploadCloud size={16} />
+          <span>Upload File</span>
+        </button>
+      </div>
 
       {/* Modals */}
       {selectedViewerDoc && (
@@ -374,7 +453,7 @@ const DashboardContent = () => {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         folders={folders}
-        currentFolderId={currentFolderId}
+        currentFolderId={uploadFolderId}
         token={token}
         onUploadSuccess={() => {
           showSuccess('Upload successful.');
@@ -397,6 +476,26 @@ const DashboardContent = () => {
           showSuccess('Document relocated successfully.');
           fetchDocuments(1, false);
         }}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteDocTarget}
+        onClose={() => setDeleteDocTarget(null)}
+        onConfirm={executeDeleteDocument}
+        title="Delete Document"
+        message={`Are you sure you want to delete "${deleteDocTarget?.filename}"? This action is permanent and cannot be undone.`}
+        confirmText="Delete File"
+        danger={true}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteFolderTarget}
+        onClose={() => setDeleteFolderTarget(null)}
+        onConfirm={executeDeleteFolder}
+        title="Delete Folder"
+        message={`Are you sure you want to delete folder "${deleteFolderTarget?.name}"? All files inside will be permanently removed.`}
+        confirmText="Delete Folder"
+        danger={true}
       />
     </div>
   );

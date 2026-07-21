@@ -34,9 +34,13 @@ const MoveModal = ({ isOpen, onClose, doc, folders = [], onMoveSuccess }) => {
 
     try {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const authToken = (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(`${BACKEND}/api/documents/${doc.id}/move`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({ folderId: parseInt(targetFolderId, 10) })
       });
       if (!res.ok) {

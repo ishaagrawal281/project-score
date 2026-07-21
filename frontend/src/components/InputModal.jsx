@@ -44,12 +44,12 @@ const InputModal = ({ isOpen, title, label, placeholder, defaultValue = '', onCo
         <div className="input-modal-header">
           <h3 className="input-modal-title">{title}</h3>
           <button className="input-modal-close" onClick={onCancel}>
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         <div className="input-modal-body">
-          <label className="input-modal-label">{label}</label>
+          {label && label !== title && <label className="input-modal-label">{label}</label>}
           <input
             ref={inputRef}
             type="text"
@@ -63,13 +63,13 @@ const InputModal = ({ isOpen, title, label, placeholder, defaultValue = '', onCo
 
         <div className="input-modal-footer">
           <button 
-            className="input-modal-btn input-modal-btn-secondary"
+            className="btn btn-secondary"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button 
-            className="input-modal-btn input-modal-btn-primary"
+            className="btn btn-primary"
             onClick={handleConfirm}
             disabled={!value.trim()}
           >
