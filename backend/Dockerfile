@@ -9,10 +9,13 @@ RUN npm install --production=false
 # Copy source
 COPY . .
 
-# Generate Prisma client without requiring DATABASE_URL
-RUN npx prisma generate
+# Generate Prisma client - set a dummy DATABASE_URL for build time
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
 
 EXPOSE 5000
 
 # Start the application
 CMD ["npm", "start"]
+
+
+
