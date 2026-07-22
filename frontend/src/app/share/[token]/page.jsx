@@ -92,7 +92,7 @@ const SharedDocument = () => {
     <div className="shared-layout">
       <nav className="shared-nav">
         <div className="nav-brand">
-          <HardDrive size={24} style={{ fill: 'rgba(15, 82, 186, 0.1)' }} />
+          <HardDrive size={24} style={{ color: 'var(--primary)' }} />
           <span>DocVault</span>
         </div>
       </nav>
@@ -111,19 +111,20 @@ const SharedDocument = () => {
 
           <h2 
             style={{ 
-              fontSize: '20px', 
+              fontSize: '22px', 
               fontWeight: 700, 
-              marginBottom: '4px', 
+              marginBottom: '6px', 
               color: 'var(--text-main)',
               overflow: 'hidden', 
               textOverflow: 'ellipsis', 
-              whiteSpace: 'nowrap' 
+              whiteSpace: 'nowrap',
+              textAlign: 'center'
             }}
             title={doc.filename}
           >
             {doc.filename}
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px', textAlign: 'center' }}>
             File Size: {formatBytes(doc.size)}
           </p>
 

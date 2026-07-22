@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Search, LogOut, HardDrive, Menu } from 'lucide-react';
+import { Search, LogOut, HardDrive, ShieldCheck } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-const Navbar = ({ onToggleSidebar }) => {
+const Navbar = () => {
   const { user, logout } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -28,15 +28,10 @@ const Navbar = ({ onToggleSidebar }) => {
 
   return (
     <nav className="navbar">
-      <div className="nav-brand">
-        <button 
-          onClick={onToggleSidebar} 
-          style={{ display: 'flex', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', marginRight: '8px' }}
-          className="mobile-menu-btn"
-        >
-          <Menu size={20} className="folder-icon" style={{ color: 'var(--primary)' }} />
-        </button>
-        <HardDrive size={24} style={{ fill: 'rgba(15, 82, 186, 0.1)' }} />
+      <div className="nav-brand" style={{ cursor: 'pointer' }} onClick={() => router.push('/dashboard')}>
+        <div className="nav-brand-icon-wrap">
+          <HardDrive size={22} />
+        </div>
         <span>DocVault</span>
       </div>
 
@@ -57,16 +52,20 @@ const Navbar = ({ onToggleSidebar }) => {
         <button 
           className="profile-avatar" 
           onClick={() => setShowProfileMenu(!showProfileMenu)}
-          style={{ border: 'none', cursor: 'pointer', outline: 'none' }}
+          title={user?.name || 'User Account'}
+          style={{ cursor: 'pointer', outline: 'none' }}
         >
           {userInitial}
         </button>
 
         {showProfileMenu && (
-          <div className="dropdown-menu" style={{ right: 0, top: '48px', width: '220px' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>{user?.name}</div>
+          <div className="dropdown-menu" style={{ right: 0, top: '54px', width: '230px' }} onMouseLeave={() => setShowProfileMenu(false)}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-main)' }}>{user?.name || 'Doc User'}</div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}>
+                <ShieldCheck size={13} /> Encrypted Session
+              </div>
             </div>
             <div 
               className="dropdown-item dropdown-item-danger" 

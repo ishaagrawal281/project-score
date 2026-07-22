@@ -3,9 +3,6 @@
 import React, { useState } from 'react';
 import { Folder, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
-/**
- * Folder card component. Double-click or single-click details to enter directories.
- */
 const FolderCard = ({ folder, onOpen, onRename, onDelete }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -31,7 +28,9 @@ const FolderCard = ({ folder, onOpen, onRename, onDelete }) => {
         onClick={() => onOpen(folder)}
         style={{ flexGrow: 1, minWidth: 0 }}
       >
-        <Folder className="folder-icon" size={22} style={{ fill: '#fcd34d' }} />
+        <div className="folder-icon-wrap">
+          <Folder size={20} />
+        </div>
         <span className="folder-name" title={folder.name}>
           {folder.name}
         </span>
@@ -48,7 +47,7 @@ const FolderCard = ({ folder, onOpen, onRename, onDelete }) => {
       {showDropdown && (
         <div 
           className="dropdown-menu" 
-          style={{ right: '8px', top: '44px', minWidth: '130px' }}
+          style={{ right: '8px', top: '48px', minWidth: '140px' }}
           onMouseLeave={() => setShowDropdown(false)}
         >
           <div 

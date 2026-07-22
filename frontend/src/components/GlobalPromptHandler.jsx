@@ -21,10 +21,12 @@ const GlobalPromptHandler = ({ children }) => {
       return new Promise((resolve) => {
         resolveRef.current = resolve;
         
+        const cleanMsg = message ? message.replace(/:$/, '').trim() : 'Enter value';
+        
         setConfig({
-          title: message || 'Enter value',
-          label: message || 'Input',
-          placeholder: '',
+          title: cleanMsg,
+          label: '',
+          placeholder: 'e.g. Work Documents',
           defaultValue: defaultValue || ''
         });
         setIsOpen(true);

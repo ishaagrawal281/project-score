@@ -22,7 +22,6 @@ const LoginContent = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (status === 'authenticated' && session?.accessToken) {
       router.push('/dashboard');
@@ -60,21 +59,19 @@ const LoginContent = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setErrorMsg('');
-    await signIn('google', { callbackUrl: '/dashboard' });
+    await signIn('google', { callbackUrl: '/dashboard' }, { prompt: 'select_account' });
   };
 
-  // Show loading while checking auth status
   if (status === 'loading') {
     return (
       <div className="auth-container">
-        <div className="auth-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
-          <Loader size={40} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary)' }} />
+        <div className="auth-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px' }}>
+          <Loader size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary)' }} />
         </div>
       </div>
     );
   }
 
-  // Don't render form if already authenticated (redirect will happen)
   if (status === 'authenticated' && session?.accessToken) {
     return null;
   }
@@ -84,11 +81,13 @@ const LoginContent = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-logo">
-            <HardDrive size={28} style={{ fill: 'rgba(15, 82, 186, 0.1)' }} />
+            <div className="nav-brand-icon-wrap" style={{ width: '38px', height: '38px' }}>
+              <HardDrive size={22} />
+            </div>
             <span>DocVault</span>
           </div>
           <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Securely manage and access your digital files</p>
+          <p className="auth-subtitle">Securely manage and access your digital documents</p>
         </div>
 
         {errorMsg && (
@@ -104,7 +103,7 @@ const LoginContent = () => {
             <input
               type="email"
               className="form-input"
-              placeholder="name@company.com"
+              placeholder="name@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -137,7 +136,7 @@ const LoginContent = () => {
         <button
           type="button"
           className="btn btn-secondary btn-full"
-          style={{ marginTop: '12px' }}
+          style={{ marginTop: '14px' }}
           onClick={handleGoogleSignIn}
           disabled={loading}
         >
@@ -147,7 +146,7 @@ const LoginContent = () => {
         <div className="auth-footer">
           Don't have an account?{' '}
           <Link href="/register" className="auth-link">
-            Create Account
+            Sign Up
           </Link>
         </div>
       </div>
