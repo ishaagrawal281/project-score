@@ -67,6 +67,16 @@ const DocumentCard = ({ doc, onShare, onDelete, onMove }) => {
 
   const fileUrl = getAbsoluteFileUrl(doc.cloudUrl);
 
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = doc.filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="doc-card">
       <div className="doc-preview-placeholder">
@@ -82,16 +92,13 @@ const DocumentCard = ({ doc, onShare, onDelete, onMove }) => {
       </div>
 
       <div className="doc-actions">
-        <a 
-          href={fileUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
+        <button 
+          onClick={handleDownload}
           className="doc-btn" 
           title="Download File"
-          download={doc.filename}
         >
           <Download size={15} />
-        </a>
+        </button>
         <button 
           onClick={() => onShare(doc)} 
           className="doc-btn" 
