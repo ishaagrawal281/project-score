@@ -34,6 +34,17 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
     });
   };
 
+  const handleDownload = (doc) => {
+    const fileUrl = getAbsoluteFileUrl(doc.cloudUrl);
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = doc.filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="documents-table-wrapper">
       <table className="documents-table">
@@ -84,16 +95,13 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
                     className="doc-actions-inline"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <a 
-                      href={fileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <button 
+                      onClick={() => handleDownload(doc)}
                       className="doc-btn-inline" 
                       title="Download File"
-                      download={doc.filename}
                     >
                       <Download size={15} />
-                    </a>
+                    </button>
                     <button 
                       onClick={() => onShare(doc)} 
                       className="doc-btn-inline" 

@@ -88,6 +88,16 @@ const SharedDocument = () => {
     timeStyle: 'short'
   });
 
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = doc.filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="shared-layout">
       <nav className="shared-nav">
@@ -177,17 +187,14 @@ const SharedDocument = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <a 
-              href={fileUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <button 
+              onClick={handleDownload}
               className="btn btn-primary" 
-              download={doc.filename}
               style={{ padding: '12px 32px' }}
             >
               <Download size={16} />
               <span>Download File</span>
-            </a>
+            </button>
           </div>
         </div>
       </div>
