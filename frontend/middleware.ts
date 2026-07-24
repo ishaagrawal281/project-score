@@ -6,20 +6,24 @@ export const middleware = withAuth(
     const pathname = request.nextUrl.pathname;
     const token = request.nextauth.token;
 
-    // If user is authenticated (has token)
-    if (token?.accessToken) {
-      // Redirect away from login/register pages to dashboard
-      if (pathname === '/login' || pathname === '/register') {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+    try {
+      // If user is authenticated (has token)
+      if (token?.accessToken) {
+        // Redirect away from login/register pages to dashboard
+        if (pathname === '/login' || pathname === '/register') {
+          return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
       }
-    }
 
-    // If user is not authenticated
-    if (!token?.accessToken) {
-      // Redirect to login if accessing protected routes
-      if (pathname === '/dashboard' || pathname.startsWith('/share')) {
-        return NextResponse.redirect(new URL('/login', request.url));
+      // If user is not authenticated
+      if (!token?.accessToken) {
+        // Redirect to login if accessing protected routes
+        if (pathname === '/dashboard' || pathname.startsWith('/share')) {
+          return NextResponse.redirect(new URL('/login', request.url));
+        }
       }
+    } catch (e) {
+      console.error('Middleware URL parsing error:', e);
     }
 
     return NextResponse.next();
