@@ -93,6 +93,20 @@ app.get('/health', async (req, res) => {
 // Centralized Error Middleware (Must be registered last)
 app.use(errorMiddleware);
 
+// 404 Not Found handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'API endpoint not found',
+    path: req.path,
+    method: req.method
+  });
+});
+
+// Unhandled rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Document Vault Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
