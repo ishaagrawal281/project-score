@@ -4,8 +4,25 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const connectionString = process.env.DATABASE_URL;
+console.log("DB URL inside db.js:", connectionString);
 
-const pool = new Pool({ connectionString });
+// Parse connection string manually to ensure pg doesn't fallback to OS defaults
+let poolConfig = { connectionString };
+try {
+  const url = new URL(connectionString);
+  poolConfig = {
+    user: url.username,
+    password: url.password,
+    host: url.hostname,
+    port: url.port || 5432,
+    database: url.pathname.replace('/', ''),
+    ssl: { rejectUnauthorized: false }
+  };
+} catch (e) {
+  console.log("Error parsing DB URL", e);
+}
+
+const pool = new Pool(poolConfig);
 const adapter = new PrismaPg(pool);
 
 const prisma = new PrismaClient({ adapter });
