@@ -132,12 +132,20 @@ const Navbar = ({ folders = [] }) => {
         )}
       </div>
 
-      <div className="profile-menu" style={{ position: 'relative' }}>
-        <button className="profile-avatar" onClick={() => setShowProfileMenu(!showProfileMenu)} title={user?.name || 'User Account'} style={{ cursor: 'pointer', outline: 'none' }}>{userInitial}</button>
-        {showProfileMenu && <div className="dropdown-menu" style={{ right: 0, top: '54px', width: '230px' }} onMouseLeave={() => setShowProfileMenu(false)}><div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-subtle)' }}><div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-main)' }}>{user?.name || 'Doc User'}</div><div style={{ fontSize: '12px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</div><div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px', fontSize: '11px', color: 'var(--success)', fontWeight: 600 }}><ShieldCheck size={13} /> Encrypted Session</div></div><div className="dropdown-item dropdown-item-danger" onClick={() => { setShowProfileMenu(false); logout(); router.push('/login'); }}><LogOut size={16} /><span>Sign Out</span></div></div>}
+      <div className="profile-menu">
+        <button 
+          className="profile-avatar" 
+          onClick={() => router.push('/profile')} 
+          title={`View Profile (${user?.name || 'User Account'})`} 
+          style={{ cursor: 'pointer', outline: 'none' }}
+          aria-label="User Profile"
+        >
+          {userInitial}
+        </button>
       </div>
     </nav>
   );
 };
+
 
 export default Navbar;

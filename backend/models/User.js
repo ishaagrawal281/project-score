@@ -77,11 +77,6 @@ class User {
     };
   }
 
-  /**
-   * Find user by ID (excluding password for security).
-   * @param {number} id
-   * @returns {Promise<Object|null>} Safe user metadata or null
-   */
   static async findById(id) {
     return await db.user.findUnique({
       where: { id: parseInt(id, 10) },
@@ -96,6 +91,61 @@ class User {
       }
     });
   }
+
+  static async findWithPasswordById(id) {
+    return await db.user.findUnique({
+      where: { id: parseInt(id, 10) }
+    });
+  }
+
+
+  static async updateEmail(id, email) {
+    const user = await db.user.update({
+      where: { id: parseInt(id, 10) },
+      data: { email }
+    });
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      provider: user.provider
+    };
+  }
+
+  static async updatePassword(id, hashedPassword) {
+    await db.user.update({
+      where: { id: parseInt(id, 10) },
+      data: { password: hashedPassword }
+    });
+    return true;
+  }
+
+  static async deleteAccount(id) {
+    await db.user.delete({
+      where: { id: parseInt(id, 10) }
+    });
+    return true;
+  }
+
+  static async getStorageUsage(id) {
+    const result = await db.document.aggregate({
+      where: { userId: parseInt(id, 10) },
+      _sum: { size: true },
+      _count: { id: true }
+    });
+    const usedBytes = result._sum.size || 0;
+    const totalCount = result._count.id || 0;
+    const totalLimitBytes = 100 * 1024 * 1024; // 100 MB
+    const percentage = Math.min(Math.round((usedBytes / totalLimitBytes) * 100 * 100) / 100, 100);
+    return {
+      usedBytes,
+      totalLimitBytes,
+      percentage,
+      totalCount
+    };
+  }
 }
 
 module.exports = User;
+
