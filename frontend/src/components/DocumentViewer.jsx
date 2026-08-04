@@ -172,6 +172,10 @@ const DocumentViewer = ({ doc, onClose, onShare, onMove, onDelete, allDocuments 
               <Download size={18} />
               <span>Download</span>
             </a>
+            <button className="viewer-action-btn" onClick={onClose} title="Close preview">
+              <X size={18} />
+              <span>Close</span>
+            </button>
             <button 
               className="viewer-action-btn"
               onClick={() => {

@@ -52,13 +52,15 @@ class Document {
       userId: parseInt(userId, 10)
     };
 
+    if (folderId) {
+      where.folderId = parseInt(folderId, 10);
+    }
+
     if (search) {
       where.filename = {
         contains: search,
         mode: 'insensitive' // case-insensitive search
       };
-    } else if (folderId) {
-      where.folderId = parseInt(folderId, 10);
     }
 
     return await db.document.findMany({
@@ -82,13 +84,15 @@ class Document {
       userId: parseInt(userId, 10)
     };
 
+    if (folderId) {
+      where.folderId = parseInt(folderId, 10);
+    }
+
     if (search) {
       where.filename = {
         contains: search,
         mode: 'insensitive'
       };
-    } else if (folderId) {
-      where.folderId = parseInt(folderId, 10);
     }
 
     return await db.document.count({

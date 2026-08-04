@@ -22,20 +22,28 @@ import {
   FolderPlus, 
   UploadCloud, 
   CheckCircle, 
-  HardDrive, 
-  LayoutGrid, 
-  List,
-  Clock
+  HardDrive,
+  Clock,
+  Files,
+  Heart
 } from 'lucide-react';
 
 const DashboardContent = () => {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const searchQuery = searchParams?.get('search') || '';
+  const folderFilter = searchParams?.get('folder') || '';
+  const dateFrom = searchParams?.get('dateFrom') || '';
+  const dateTo = searchParams?.get('dateTo') || '';
+  const typeFilter = searchParams?.get('type') || '';
+  const sizeFilter = searchParams?.get('size') || '';
+  const favoritesOnly = searchParams?.get('favorites') === 'true';
+  const sortBy = searchParams?.get('sort') || 'newest';
 
   // Core state
   const [folders, setFolders] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [totalDocuments, setTotalDocuments] = useState(0);
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   
@@ -100,11 +108,9 @@ const DashboardContent = () => {
       const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
       let url = `${BACKEND}/api/documents?page=${pageNum}&limit=20`;
       
-      if (searchQuery) {
-        url += `&search=${encodeURIComponent(searchQuery)}`;
-      } else if (currentFolderId) {
-        url += `&folderId=${currentFolderId}`;
-      }
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+      if (folderFilter) url += `&folderId=${folderFilter}`;
+      else if (!searchQuery && currentFolderId) url += `&folderId=${currentFolderId}`;
 
       const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(url, {
@@ -131,6 +137,7 @@ const DashboardContent = () => {
       }
 
       setHasMore(data.pagination?.hasMore || false);
+      setTotalDocuments(data.pagination?.totalDocs || 0);
     } catch (err) {
       console.error(err);
       setActionError(err.message || 'Failed to fetch documents list.');
@@ -142,7 +149,7 @@ const DashboardContent = () => {
   useEffect(() => {
     setPage(1);
     fetchDocuments(1, false);
-  }, [currentFolderId, searchQuery]);
+  }, [currentFolderId, searchQuery, folderFilter]);
 
   useEffect(() => {
     if (page > 1) {
@@ -194,8 +201,40 @@ const DashboardContent = () => {
   const activeFolder = folders.find((folder) => folder.id === currentFolderId);
   const uploadFolderId = currentFolderId || rootFolderId;
 
-  // Calculate Metrics - Total Storage ONLY
+  // Dashboard statistics are derived from the active document collection.
   const totalSizeBytes = documents.reduce((acc, doc) => acc + (doc.size || 0), 0);
+  const storageCapacityBytes = 3 * 1024 * 1024 * 1024;
+  const storageUsagePercent = Math.min((totalSizeBytes / storageCapacityBytes) * 100, 100);
+  const favoriteDocuments = documents.filter((doc) => doc.isFavorite || doc.favorite).length;
+  const matchesFileType = (doc) => {
+    const type = doc.fileType?.toLowerCase() || '';
+    const name = doc.filename?.toLowerCase() || '';
+    if (typeFilter === 'pdf') return type.includes('pdf') || name.endsWith('.pdf');
+    if (typeFilter === 'docx') return type.includes('officedocument.wordprocessingml') || name.endsWith('.docx');
+    if (typeFilter === 'jpg') return type === 'image/jpg' || name.endsWith('.jpg');
+    if (typeFilter === 'jpeg') return type === 'image/jpeg' || name.endsWith('.jpeg');
+    if (typeFilter === 'png') return type === 'image/png' || name.endsWith('.png');
+    return true;
+  };
+  const filteredDocuments = documents
+    .filter((doc) => {
+      const normalizedQuery = searchQuery.trim().toLowerCase();
+      const filename = (doc.filename || '').toLowerCase();
+      const scopeMatches = !normalizedQuery || filename.includes(normalizedQuery);
+      const documentDate = new Date(doc.uploadedAt);
+      const fromMatches = !dateFrom || documentDate >= new Date(`${dateFrom}T00:00:00`);
+      const toMatches = !dateTo || documentDate <= new Date(`${dateTo}T23:59:59.999`);
+      const sizeMatches = !sizeFilter || (sizeFilter === 'under1' && doc.size < 1024 * 1024) || (sizeFilter === 'oneToTen' && doc.size >= 1024 * 1024 && doc.size <= 10 * 1024 * 1024) || (sizeFilter === 'tenToHundred' && doc.size > 10 * 1024 * 1024 && doc.size <= 100 * 1024 * 1024) || (sizeFilter === 'hundredToOneGb' && doc.size > 100 * 1024 * 1024 && doc.size <= 1024 * 1024 * 1024) || (sizeFilter === 'oneToThreeGb' && doc.size > 1024 * 1024 * 1024 && doc.size <= 3 * 1024 * 1024 * 1024);
+      return scopeMatches && (!folderFilter || String(doc.folderId) === folderFilter) && fromMatches && toMatches && matchesFileType(doc) && sizeMatches && (!favoritesOnly || doc.isFavorite || doc.favorite);
+    })
+    .sort((a, b) => {
+      if (sortBy === 'oldest') return new Date(a.uploadedAt) - new Date(b.uploadedAt);
+      if (sortBy === 'az') return (a.filename || '').localeCompare(b.filename || '');
+      if (sortBy === 'za') return (b.filename || '').localeCompare(a.filename || '');
+      if (sortBy === 'largest') return (b.size || 0) - (a.size || 0);
+      if (sortBy === 'smallest') return (a.size || 0) - (b.size || 0);
+      return new Date(b.uploadedAt) - new Date(a.uploadedAt);
+    });
 
   // Folder CRUD & Document Actions
   const handleNewFolder = async () => {
@@ -317,7 +356,7 @@ const DashboardContent = () => {
 
   return (
     <div className="dashboard-layout">
-      <Navbar />
+      <Navbar folders={folders} />
       
       <Sidebar
         folders={folders}
@@ -353,16 +392,53 @@ const DashboardContent = () => {
           />
         </div>
 
+        <section className="dashboard-statistics" aria-label="Document statistics">
+          <article className="stat-card">
+            <div className="stat-card-icon"><Files size={18} strokeWidth={1.8} /></div>
+            <div className="stat-card-content">
+              <strong className="stat-card-value">{totalDocuments}</strong>
+              <span className="stat-card-label">Total Documents</span>
+            </div>
+          </article>
+
+          <article className="stat-card stat-card-storage">
+            <div className="stat-card-icon"><HardDrive size={18} strokeWidth={1.8} /></div>
+            <div className="stat-card-content">
+              <strong className="stat-card-value">{formatBytes(totalSizeBytes)}</strong>
+              <span className="stat-card-label">Storage Used</span>
+            </div>
+            <div className="stat-progress" role="progressbar" aria-label="Storage used" aria-valuenow={Math.round(storageUsagePercent)} aria-valuemin="0" aria-valuemax="100">
+              <span className="stat-progress-value" style={{ width: `${storageUsagePercent}%` }} />
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-card-icon"><FolderOpen size={18} strokeWidth={1.8} /></div>
+            <div className="stat-card-content">
+              <strong className="stat-card-value">{folders.length}</strong>
+              <span className="stat-card-label">Folders</span>
+            </div>
+          </article>
+
+          <article className="stat-card">
+            <div className="stat-card-icon"><Heart size={18} strokeWidth={1.8} /></div>
+            <div className="stat-card-content">
+              <strong className="stat-card-value">{favoriteDocuments}</strong>
+              <span className="stat-card-label">Favorite Documents</span>
+            </div>
+          </article>
+        </section>
+
         {/* Main Content Area: Recently Viewed Documents / Folder Documents */}
         <section className="documents-section">
           <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {currentFolderId === null ? (
               <>
                 <Clock size={15} style={{ color: 'var(--primary)' }} />
-                <span>Recently Viewed Documents ({documents.length})</span>
+                <span>Recently Viewed Documents ({filteredDocuments.length})</span>
               </>
             ) : (
-              <span>Folder Documents ({documents.length})</span>
+              <span>Folder Documents ({filteredDocuments.length})</span>
             )}
           </div>
 
@@ -370,11 +446,11 @@ const DashboardContent = () => {
             <div style={{ marginTop: '20px' }}>
               <SkeletonLoader type="card" count={4} />
             </div>
-          ) : documents.length > 0 ? (
+          ) : filteredDocuments.length > 0 ? (
             <>
               {viewMode === 'list' ? (
                 <DocumentList
-                  documents={documents}
+                  documents={filteredDocuments}
                   onShare={(d) => setSelectedShareDoc(d)}
                   onMove={(d) => setSelectedMoveDoc(d)}
                   onDelete={handleDeleteDocument}
@@ -383,7 +459,7 @@ const DashboardContent = () => {
                 />
               ) : (
                 <div className="documents-grid">
-                  {documents.map((doc) => (
+                  {filteredDocuments.map((doc) => (
                     <DocumentCard 
                       key={doc.id}
                       doc={doc}
