@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FileText, FileImage, File, Share2, Trash2, Download, Move } from 'lucide-react';
+import { FileText, FileImage, File, Eye, Share2, Trash2, Download, Move } from 'lucide-react';
 import { formatBytes, getAbsoluteFileUrl } from './DocumentCard';
 
 const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumentClick }) => {
@@ -95,10 +95,21 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
                     className="doc-actions-inline"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <button
+                      onClick={() => onDocumentClick(doc)}
+                      className="doc-btn-inline"
+                      title="Preview"
+                      aria-label="Preview document"
+                      data-tooltip="Preview"
+                    >
+                      <Eye size={15} />
+                    </button>
                     <button 
                       onClick={() => handleDownload(doc)}
                       className="doc-btn-inline" 
                       title="Download File"
+                      aria-label="Download file"
+                      data-tooltip="Download"
                     >
                       <Download size={15} />
                     </button>
@@ -106,6 +117,8 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
                       onClick={() => onShare(doc)} 
                       className="doc-btn-inline" 
                       title="Generate Share Link"
+                      aria-label="Share document"
+                      data-tooltip="Share"
                     >
                       <Share2 size={15} />
                     </button>
@@ -113,6 +126,8 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
                       onClick={() => onMove(doc)} 
                       className="doc-btn-inline" 
                       title="Move File"
+                      aria-label="Move document"
+                      data-tooltip="Move"
                     >
                       <Move size={15} />
                     </button>
@@ -120,6 +135,8 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
                       onClick={() => onDelete(doc)} 
                       className="doc-btn-inline doc-btn-danger-inline" 
                       title="Delete File"
+                      aria-label="Delete document"
+                      data-tooltip="Delete"
                     >
                       <Trash2 size={15} />
                     </button>

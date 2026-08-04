@@ -27,14 +27,14 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // Check if origin is in allowed list or matches localhost pattern
     const isAllowed = allowedOrigins.includes(origin) || /^http:\/\/localhost:\d+$/.test(origin);
-    
+
     if (isAllowed) {
       return callback(null, true);
     }
-    
+
     console.warn(`[CORS] Blocked request from origin: ${origin}`);
     return callback(new Error('Not allowed by CORS'));
   },
@@ -69,10 +69,10 @@ app.get('/', (req, res) => {
 app.get('/health', async (req, res) => {
   try {
     const prisma = require('./config/db');
-    
+
     // Test database connection
     await prisma.$queryRaw`SELECT 1`;
-    
+
     res.status(200).json({
       status: 'healthy',
       message: 'Service and database are operational',
