@@ -183,7 +183,7 @@ const login = async (req, res, next) => {
 };
 
 /**
- * Retrieve verified user profile.
+ * Retrieve verified user profile with storage usage.
  */
 const getProfile = async (req, res, next) => {
   try {
@@ -191,7 +191,100 @@ const getProfile = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ error: 'User profile not found.' });
     }
-    return res.status(200).json({ user });
+    const storage = await User.getStorageUsage(req.user.id);
+    return res.status(200).json({ user, storage });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update user email address.
+ */
+const updateEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.trim()) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
+    }
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if another user already has this email
+    const existing = await User.findByEmail(cleanEmail);
+    if (existing && existing.id !== req.user.id) {
+      return res.status(400).json({ error: 'An account with this email address already exists.' });
+    }
+
+    const updatedUser = await User.updateEmail(req.user.id, cleanEmail);
+
+    // Generate new JWT token with updated email
+    const token = generateJwt({
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email
+    });
+
+    return res.status(200).json({
+      message: 'Email updated successfully.',
+      user: updatedUser,
+      token
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update user password.
+ */
+const updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Both current password and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+    }
+
+    const userWithPassword = await User.findWithPasswordById(req.user.id);
+    if (!userWithPassword) {
+      return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, userWithPassword.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.updatePassword(req.user.id, hashedPassword);
+
+    return res.status(200).json({
+      message: 'Password updated successfully.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete user account.
+ */
+const deleteAccount = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    await User.deleteAccount(req.user.id);
+
+    return res.status(200).json({
+      message: 'Account deleted successfully.'
+    });
   } catch (error) {
     next(error);
   }
@@ -201,5 +294,9 @@ module.exports = {
   signup,
   login,
   googleLogin,
-  getProfile
+  getProfile,
+  updateEmail,
+  updatePassword,
+  deleteAccount
 };
+
