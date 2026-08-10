@@ -460,7 +460,7 @@ const ProfileContent = () => {
                 </div>
                 <div className="premium-feature-item">
                   <Check size={16} className="feature-check" />
-                  <span><strong>256-Bit End-to-End Encryption</strong> for enhanced privacy</span>
+                  <span><strong>End-to-End Encryption</strong> for enhanced privacy</span>
                 </div>
                 <div className="premium-feature-item">
                   <Check size={16} className="feature-check" />

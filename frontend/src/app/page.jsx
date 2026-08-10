@@ -152,7 +152,7 @@ export default function Home() {
             </div>
             <div className="landing-trust-item">
               <CheckCircle2 size={16} />
-              <span>256-Bit Encrypted</span>
+              <span>Encrypted Storage</span>
             </div>
             <div className="landing-trust-item">
               <CheckCircle2 size={16} />
@@ -173,7 +173,7 @@ export default function Home() {
               <ShieldCheck size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--secondary)' }}>256-bit AES Vault</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--secondary)' }}>Secure AES Vault</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Bank-grade encryption active</div>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function Home() {
             </div>
             <h3 className="landing-why-title">Secure Storage</h3>
             <p className="landing-why-desc">
-              AES-256 standard encryption & JWT tokens keep your identity and sensitive documents private.
+              Standard encryption & JWT tokens keep your identity and sensitive documents private.
             </p>
           </div>
 
