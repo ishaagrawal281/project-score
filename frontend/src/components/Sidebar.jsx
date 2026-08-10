@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Folder, ShieldCheck, FileText, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Folder, FileText, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
 const Sidebar = ({ folders = [], activeFolderId, onSelectFolder, onNewFolder, onRenameFolder, onDeleteFolder, loading }) => {
   const [openMenuFolderId, setOpenMenuFolderId] = useState(null);
@@ -144,17 +144,7 @@ const Sidebar = ({ folders = [], activeFolderId, onSelectFolder, onNewFolder, on
 
       </div>
 
-      <div className="sidebar-footer">
-        <div className="sidebar-security-badge">
-          <div className="icon-box">
-            <ShieldCheck size={16} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '12px' }}>DocVault Security</div>
-            <span style={{ fontSize: '11px', color: 'var(--text-light)' }}>256-bit AES Encryption</span>
-          </div>
-        </div>
-      </div>
+
     </aside>
   );
 };
