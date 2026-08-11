@@ -32,8 +32,18 @@ const Register = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters long.');
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      setErrorMsg('Password must contain at least 1 number.');
+      return;
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
+      setErrorMsg('Password must contain at least 1 special character.');
       return;
     }
 
@@ -123,7 +133,7 @@ const Register = () => {
             <input
               type="password"
               className="form-input"
-              placeholder="At least 6 characters"
+              placeholder="Min 8 characters (1 number, 1 special char)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

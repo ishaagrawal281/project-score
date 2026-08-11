@@ -159,8 +159,18 @@ const ProfileContent = () => {
       return;
     }
 
-    if (!newPassword || newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long.');
+    if (!newPassword || newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long.');
+      return;
+    }
+
+    if (!/\d/.test(newPassword)) {
+      setPasswordError('New password must contain at least 1 number.');
+      return;
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword)) {
+      setPasswordError('New password must contain at least 1 special character.');
       return;
     }
 
@@ -370,7 +380,7 @@ const ProfileContent = () => {
                     className="form-input"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 6 characters"
+                    placeholder="Min 8 characters (1 number, 1 special char)"
                     required
                   />
                 </div>

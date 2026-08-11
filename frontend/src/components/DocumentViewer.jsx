@@ -16,19 +16,24 @@ const DocumentViewer = ({ doc, onClose, onShare, onMove, onDelete, allDocuments 
     }
   }, [doc, allDocuments]);
 
-  const fileUrl = getAbsoluteFileUrl(doc.cloudUrl);
-  const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(doc.fileType.toLowerCase()) || 
-                  /\.(jpg|jpeg|png)$/i.test(doc.filename);
-  const isPdf = doc.fileType.includes('pdf') || /\.pdf$/i.test(doc.filename);
-  const isDocx = doc.fileType.includes('word') || 
-                 doc.fileType.includes('officedocument.wordprocessingml') || 
-                 /\.docx$/i.test(doc.filename);
+  const currentDoc = allDocuments[currentIndex] || doc;
+  const currentFileUrl = getAbsoluteFileUrl(currentDoc?.cloudUrl);
 
-  const uploadDate = new Date(doc.uploadedAt).toLocaleDateString(undefined, {
+  const fileTypeStr = (currentDoc?.fileType || '').toLowerCase();
+  const filenameStr = (currentDoc?.filename || '').toLowerCase();
+
+  const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(fileTypeStr) || 
+                  /\.(jpg|jpeg|png)$/i.test(filenameStr);
+  const isPdf = fileTypeStr.includes('pdf') || /\.pdf$/i.test(filenameStr);
+  const isDocx = fileTypeStr.includes('word') || 
+                 fileTypeStr.includes('officedocument.wordprocessingml') || 
+                 /\.docx$/i.test(filenameStr);
+
+  const uploadDate = currentDoc?.uploadedAt ? new Date(currentDoc.uploadedAt).toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
-  });
+  }) : '';
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
@@ -41,9 +46,6 @@ const DocumentViewer = ({ doc, onClose, onShare, onMove, onDelete, allDocuments 
       setCurrentIndex(currentIndex + 1);
     }
   };
-
-  const currentDoc = allDocuments[currentIndex] || doc;
-  const currentFileUrl = getAbsoluteFileUrl(currentDoc.cloudUrl);
 
   const renderPreview = () => {
     if (isImage) {
