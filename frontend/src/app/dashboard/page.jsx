@@ -415,7 +415,7 @@ const DashboardContent = () => {
           <article className="stat-card">
             <div className="stat-card-icon"><FolderOpen size={18} strokeWidth={1.8} /></div>
             <div className="stat-card-content">
-              <strong className="stat-card-value">{folders.length}</strong>
+              <strong className="stat-card-value">{folders.filter(f => f.parentId !== null).length}</strong>
               <span className="stat-card-label">Folders</span>
             </div>
           </article>

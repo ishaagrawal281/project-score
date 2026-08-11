@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { signIn, useSession } from 'next-auth/react';
 import { HardDrive, AlertTriangle, Loader } from 'lucide-react';
+import { validatePassword } from '../../utils/passwordValidator';
 
 const Register = () => {
   const { signup } = useAuth();
@@ -27,13 +28,19 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !password) {
-      setErrorMsg('All fields are required.');
+    if (!name.trim()) {
+      setErrorMsg('Full name is required.');
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
+    if (!email.trim()) {
+      setErrorMsg('Email address is required.');
+      return;
+    }
+
+    const validationError = validatePassword(password, { name, email });
+    if (validationError) {
+      setErrorMsg(validationError);
       return;
     }
 
@@ -123,7 +130,7 @@ const Register = () => {
             <input
               type="password"
               className="form-input"
-              placeholder="At least 6 characters"
+              placeholder="Minimum 12 characters (passphrases welcome)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

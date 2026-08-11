@@ -17,9 +17,12 @@ export const getAbsoluteFileUrl = (url) => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  const apiBase = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL) || 'http://localhost:5000/api';
-  const serverBase = apiBase.replace('/api', '');
-  return `${serverBase}${url}`;
+  const backendUrl = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BACKEND_URL) || 
+                     (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '') : '') || 
+                     'http://localhost:5000';
+  const cleanBase = backendUrl.replace(/\/$/, '');
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanPath}`;
 };
 
 const DocumentCard = ({ doc, onShare, onDelete, onMove }) => {
