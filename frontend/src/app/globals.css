@@ -72,7 +72,7 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
   background-image: 
     radial-gradient(circle at 10% 20%, rgba(209, 139, 86, 0.03) 0%, transparent 40%),
     radial-gradient(circle at 90% 80%, rgba(28, 28, 28, 0.03) 0%, transparent 40%);
@@ -2410,7 +2410,7 @@ html {
   background-color: var(--bg-page);
   color: var(--text-main);
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .landing-glow-top {

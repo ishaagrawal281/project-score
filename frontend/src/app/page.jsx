@@ -173,8 +173,8 @@ export default function Home() {
               <ShieldCheck size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--secondary)' }}>Secure AES Vault</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Bank-grade encryption active</div>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--secondary)' }}>Protected Cloud Vault</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Built to help keep your documents safe</div>
             </div>
           </div>
 
@@ -218,9 +218,9 @@ export default function Home() {
             <div className="landing-feature-icon">
               <ShieldCheck size={26} />
             </div>
-            <h3 className="landing-feature-title">Secure Cloud Storage</h3>
+            <h3 className="landing-feature-title">Enterprise-Grade File Security</h3>
             <p className="landing-feature-desc">
-              Your files are stored safely with strong access controls and encrypted metadata protection, shielding them against unauthorized access.
+              Your files are protected with secure storage, access controls, and encryption to help keep sensitive information safe.
             </p>
           </div>
 
@@ -229,9 +229,9 @@ export default function Home() {
             <div className="landing-feature-icon">
               <UploadCloud size={26} />
             </div>
-            <h3 className="landing-feature-title">Upload Documents up to 10 MB</h3>
+            <h3 className="landing-feature-title">Upload Files up to 10 MB</h3>
             <p className="landing-feature-desc">
-              Seamlessly upload PDFs, identity records, financial contracts, images, and docx files up to 10 MB with live progress tracking.
+              Upload PDFs, documents, images, and other files up to 10 MB with smooth progress tracking.
             </p>
           </div>
 
@@ -240,9 +240,9 @@ export default function Home() {
             <div className="landing-feature-icon">
               <Clock size={26} />
             </div>
-            <h3 className="landing-feature-title">Time-Limited Shareable Links</h3>
+            <h3 className="landing-feature-title">Controlled File Sharing</h3>
             <p className="landing-feature-desc">
-              Share documents securely with guests or external partners using customizable expiration windows (1h, 24h, 7 days) and view limits.
+              Share files securely with others for a set period of time, with flexible access controls.
             </p>
           </div>
 
@@ -251,9 +251,9 @@ export default function Home() {
             <div className="landing-feature-icon">
               <Search size={26} />
             </div>
-            <h3 className="landing-feature-title">Fast Document Search & Organization</h3>
+            <h3 className="landing-feature-title">Organized File Management</h3>
             <p className="landing-feature-desc">
-              Organize documents into custom folders and locate files instantly using real-time search, file-type filters, and date range filters.
+              Organize files into folders and find what you need quickly with search and filtering tools.
             </p>
           </div>
 
@@ -262,9 +262,9 @@ export default function Home() {
             <div className="landing-feature-icon">
               <Layers size={26} />
             </div>
-            <h3 className="landing-feature-title">Infinite Scroll Dashboard</h3>
+            <h3 className="landing-feature-title">Seamless Dashboard Experience</h3>
             <p className="landing-feature-desc">
-              Enjoy a fluid, pagination-free browsing experience with dynamic infinite scrolling that loads your document list on demand.
+              Browse your documents smoothly with a modern, continuous loading experience.
             </p>
           </div>
 
@@ -273,9 +273,9 @@ export default function Home() {
             <div className="landing-feature-icon">
               <KeyRound size={26} />
             </div>
-            <h3 className="landing-feature-title">Secure Authentication</h3>
+            <h3 className="landing-feature-title">Protected Access</h3>
             <p className="landing-feature-desc">
-              Integrated NextAuth authentication offering Google OAuth single sign-on and JWT token protection for enterprise-grade login safety.
+              Sign in securely with trusted authentication methods designed to protect account access.
             </p>
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function Home() {
             <div className="landing-step-num">01</div>
             <h3 className="landing-step-title">Login or Create an Account</h3>
             <p className="landing-step-desc">
-              Create an account or sign in using your email or Google account with a single click.
+              Create an account or sign in securely using your email.
             </p>
           </div>
 
@@ -346,9 +346,9 @@ export default function Home() {
             <div className="landing-why-icon-wrap">
               <ShieldCheck size={28} />
             </div>
-            <h3 className="landing-why-title">Secure Storage</h3>
+            <h3 className="landing-why-title">Protected File Storage</h3>
             <p className="landing-why-desc">
-              Standard encryption & JWT tokens keep your identity and sensitive documents private.
+              Your identity and sensitive files are protected with secure storage and access controls.
             </p>
           </div>
 
@@ -357,9 +357,9 @@ export default function Home() {
             <div className="landing-why-icon-wrap">
               <Zap size={28} />
             </div>
-            <h3 className="landing-why-title">Fast Access</h3>
+            <h3 className="landing-why-title">Quick Access</h3>
             <p className="landing-why-desc">
-              Sub-second document retrieval and instant search keep your workflow smooth and productive.
+              Find and open documents quickly with fast search and easy access.
             </p>
           </div>
 
@@ -368,9 +368,9 @@ export default function Home() {
             <div className="landing-why-icon-wrap">
               <Lock size={28} />
             </div>
-            <h3 className="landing-why-title">Privacy Focused</h3>
+            <h3 className="landing-why-title">Privacy First</h3>
             <p className="landing-why-desc">
-              No tracking, zero unauthorized data sharing, and strict owner permission validation.
+              Your files stay private with strong access control and no unnecessary sharing.
             </p>
           </div>
 
@@ -379,9 +379,9 @@ export default function Home() {
             <div className="landing-why-icon-wrap">
               <Share2 size={28} />
             </div>
-            <h3 className="landing-why-title">Easy Document Sharing</h3>
+            <h3 className="landing-why-title">Simple File Sharing</h3>
             <p className="landing-why-desc">
-              Send guest links with automatic expiration so you remain in total control of shared files.
+              Share files easily with guest links that expire automatically.
             </p>
           </div>
         </div>
@@ -447,7 +447,7 @@ export default function Home() {
                 <span>GitHub Repository</span>
               </a>
               <a
-                href="mailto:support@docvault.app"
+                href="mailto:gaurimhetre2007@gmail.com"
                 className="landing-footer-link"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
@@ -461,9 +461,9 @@ export default function Home() {
         <div className="landing-footer-bottom">
           <div>© 2026 DocVault. All rights reserved.</div>
           <div style={{ display: 'flex', gap: '20px' }}>
-            <span>Privacy Policy</span>
-            <span>Terms of Service</span>
-            <span>Security</span>
+            <Link href="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }} onMouseOver={(e) => e.target.style.color = '#111'} onMouseOut={(e) => e.target.style.color = 'inherit'}>Privacy Policy</Link>
+            <Link href="/terms-of-service" style={{ color: 'inherit', textDecoration: 'none' }} onMouseOver={(e) => e.target.style.color = '#111'} onMouseOut={(e) => e.target.style.color = 'inherit'}>Terms of Service</Link>
+            <Link href="/security" style={{ color: 'inherit', textDecoration: 'none' }} onMouseOver={(e) => e.target.style.color = '#111'} onMouseOut={(e) => e.target.style.color = 'inherit'}>Security</Link>
           </div>
         </div>
       </footer>

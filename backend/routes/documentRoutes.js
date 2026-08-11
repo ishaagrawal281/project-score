@@ -13,5 +13,6 @@ router.post('/upload', upload.single('file'), validateFileUpload, documentContro
 router.get('/', documentController.getDocuments);
 router.delete('/:id', documentController.deleteDocument);
 router.put('/:id/move', documentController.moveDocument);
+router.put('/:id/favorite', documentController.toggleFavoriteDocument);
 
 module.exports = router;

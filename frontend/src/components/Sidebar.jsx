@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Folder, FileText, Plus, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Folder, FileText, Plus, MoreVertical, Edit2, Trash2, Heart } from 'lucide-react';
 
-const Sidebar = ({ folders = [], activeFolderId, onSelectFolder, onNewFolder, onRenameFolder, onDeleteFolder, loading }) => {
+const Sidebar = ({ folders = [], activeFolderId, onSelectFolder, onNewFolder, onRenameFolder, onDeleteFolder, loading, isFavoritesActive, onSelectFavorites }) => {
   const [openMenuFolderId, setOpenMenuFolderId] = useState(null);
   // Root container is not a navigable sidebar item; documentFolders contains user directories
   const documentFolders = folders.filter((folder) => folder.parentId !== null);
@@ -23,11 +23,21 @@ const Sidebar = ({ folders = [], activeFolderId, onSelectFolder, onNewFolder, on
             <li>
               <button
                 type="button"
-                className={`sidebar-item-link sidebar-folder-button ${activeFolderId === null ? 'active' : ''}`}
+                className={`sidebar-item-link sidebar-folder-button ${activeFolderId === null && !isFavoritesActive ? 'active' : ''}`}
                 onClick={() => onSelectFolder(null)}
               >
                 <FileText size={18} />
                 <span>All Documents</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className={`sidebar-item-link sidebar-folder-button ${isFavoritesActive ? 'active' : ''}`}
+                onClick={onSelectFavorites}
+              >
+                <Heart size={18} />
+                <span>Favorite Documents</span>
               </button>
             </li>
           </ul>

@@ -469,10 +469,6 @@ const ProfileContent = () => {
                 </div>
                 <div className="premium-feature-item">
                   <Check size={16} className="feature-check" />
-                  <span><strong>Priority Upload Speed</strong> & dedicated Cloudfront CDN</span>
-                </div>
-                <div className="premium-feature-item">
-                  <Check size={16} className="feature-check" />
                   <span><strong>24/7 Priority Support</strong> & automatic file backups</span>
                 </div>
               </div>
@@ -482,7 +478,7 @@ const ProfileContent = () => {
                   <Zap size={18} />
                   <span>Upgrade to Premium</span>
                 </button>
-                <span className="premium-price-label">$4.99 / month • Cancel anytime</span>
+                <span className="premium-price-label">₹499 / month • Cancel anytime</span>
               </div>
             </div>
           </div>
@@ -559,7 +555,7 @@ const ProfileContent = () => {
                   <div className="premium-modal-plan-box">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <strong style={{ fontSize: '16px' }}>Unlimited Storage Plan</strong>
-                      <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)' }}>$4.99 / mo</span>
+                      <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--primary)' }}>₹499 / mo</span>
                     </div>
                     <ul style={{ fontSize: '13px', color: 'var(--text-medium)', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={14} style={{ color: 'var(--success)' }} /> Unlimited File Size & Storage Space</li>
@@ -576,7 +572,7 @@ const ProfileContent = () => {
                       setStorageData(prev => ({ ...prev, totalLimitBytes: 1000 * 1024 * 1024 * 1024, percentage: 0 }));
                     }}
                   >
-                    Activate Premium — $4.99/mo
+                    Activate Premium — ₹499/mo
                   </button>
                 </>
               )}

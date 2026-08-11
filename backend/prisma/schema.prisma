@@ -47,6 +47,7 @@ model Document {
   cloudUrl   String      @db.Text
   fileType   String      @db.VarChar(255)
   size       Int
+  isFavorite Boolean     @default(false)
   uploadedAt DateTime    @default(now()) @db.Timestamp(6)
   updatedAt  DateTime    @updatedAt @db.Timestamp(6)
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
