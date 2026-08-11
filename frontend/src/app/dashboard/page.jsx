@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -31,6 +31,7 @@ import {
 const DashboardContent = () => {
   const { token } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const searchQuery = searchParams?.get('search') || '';
   const folderFilter = searchParams?.get('folder') || '';
   const dateFrom = searchParams?.get('dateFrom') || '';
@@ -111,6 +112,7 @@ const DashboardContent = () => {
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (folderFilter) url += `&folderId=${folderFilter}`;
       else if (!searchQuery && currentFolderId) url += `&folderId=${currentFolderId}`;
+      if (favoritesOnly) url += `&favorites=true`;
 
       const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
       const res = await fetch(url, {
@@ -188,7 +190,7 @@ const DashboardContent = () => {
 
     const selectedFolder = folders.find((folder) => folder.id === currentFolderId);
     if (!selectedFolder) {
-      return [{ id: null, name: 'Recently Viewed Documents' }];
+      return [{ id: null, name: favoritesOnly ? 'Favorite Documents' : 'Recently Viewed Documents' }];
     }
 
     return [
@@ -349,6 +351,45 @@ const DashboardContent = () => {
     }
   };
 
+  const handleToggleFavorite = async (docId) => {
+    const targetDoc = documents.find(d => d.id === docId);
+    if (!targetDoc) return;
+    
+    const newStatus = !targetDoc.isFavorite;
+    
+    setDocuments(prevDocs => prevDocs.map(doc => 
+      doc.id === docId ? { ...doc, isFavorite: newStatus } : doc
+    ));
+    
+    try {
+      const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const authToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      
+      const res = await fetch(`${BACKEND}/api/documents/${docId}/favorite`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
+        body: JSON.stringify({ isFavorite: newStatus })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to update favorite status');
+      }
+      
+      if (favoritesOnly && !newStatus) {
+        setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== docId));
+      }
+    } catch (err) {
+      console.error(err);
+      setDocuments(prevDocs => prevDocs.map(doc => 
+        doc.id === docId ? { ...doc, isFavorite: !newStatus } : doc
+      ));
+      setActionError('Could not update favorite status');
+    }
+  };
+
   const showSuccess = (msg) => {
     setActionSuccess(msg);
     setTimeout(() => setActionSuccess(''), 3000);
@@ -361,11 +402,19 @@ const DashboardContent = () => {
       <Sidebar
         folders={folders}
         activeFolderId={currentFolderId}
-        onSelectFolder={setCurrentFolderId}
+        onSelectFolder={(folderId) => {
+          if (favoritesOnly) router.push('/dashboard');
+          setCurrentFolderId(folderId);
+        }}
         onNewFolder={handleNewFolder}
         onRenameFolder={handleRenameFolder}
         onDeleteFolder={handleDeleteFolder}
         loading={foldersLoading}
+        isFavoritesActive={favoritesOnly}
+        onSelectFavorites={() => {
+          router.push(favoritesOnly ? '/dashboard' : '/dashboard?favorites=true');
+          setCurrentFolderId(null);
+        }}
       />
       
       <main className="dashboard-main">
@@ -434,8 +483,12 @@ const DashboardContent = () => {
           <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {currentFolderId === null ? (
               <>
-                <Clock size={15} style={{ color: 'var(--primary)' }} />
-                <span>Recently Viewed Documents ({filteredDocuments.length})</span>
+                {favoritesOnly ? (
+                  <Heart size={15} style={{ color: 'var(--primary)', fill: 'var(--primary)' }} />
+                ) : (
+                  <Clock size={15} style={{ color: 'var(--primary)' }} />
+                )}
+                <span>{favoritesOnly ? 'Favorite Documents' : 'Recently Viewed Documents'} ({filteredDocuments.length})</span>
               </>
             ) : (
               <span>Folder Documents ({filteredDocuments.length})</span>
@@ -456,6 +509,7 @@ const DashboardContent = () => {
                   onDelete={handleDeleteDocument}
                   loading={docsLoading}
                   onDocumentClick={(d) => setSelectedViewerDoc(d)}
+                  onToggleFavorite={handleToggleFavorite}
                 />
               ) : (
                 <div className="documents-grid">
@@ -466,6 +520,7 @@ const DashboardContent = () => {
                       onShare={(d) => setSelectedShareDoc(d)}
                       onMove={(d) => setSelectedMoveDoc(d)}
                       onDelete={handleDeleteDocument}
+                      onToggleFavorite={handleToggleFavorite}
                     />
                   ))}
                 </div>
@@ -491,7 +546,7 @@ const DashboardContent = () => {
               <div className="empty-state-icon-wrap">
                 <FolderOpen size={36} />
               </div>
-              <h4 className="empty-state-title">{activeFolder ? `Folder "${activeFolder.name}" is empty` : 'No recently viewed documents'}</h4>
+              <h4 className="empty-state-title">{activeFolder ? `Folder "${activeFolder.name}" is empty` : (favoritesOnly ? 'No favorite documents' : 'No recently viewed documents')}</h4>
               <p className="empty-state-text">{activeFolder ? 'Upload documents to start populating this folder.' : 'Upload your documents to see them listed here.'}</p>
               <button className="btn btn-primary" onClick={() => setIsUploadOpen(true)}>
                 <UploadCloud size={16} />

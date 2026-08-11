@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Download, AlertCircle, HardDrive, FileText, FileImage, File, Clock } from 'lucide-react';
 import { formatBytes, getAbsoluteFileUrl } from '../../../components/DocumentCard';
+import { forceDownload } from '../../../utils/downloadHelper';
 
 const SharedDocument = () => {
   const { token } = useParams();
@@ -89,13 +90,7 @@ const SharedDocument = () => {
   });
 
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = doc.filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    forceDownload(fileUrl, doc.filename);
   };
 
   return (

@@ -1,10 +1,11 @@
 "use client";
 
 import React from 'react';
-import { FileText, FileImage, File, Eye, Share2, Trash2, Download, Move } from 'lucide-react';
+import { FileText, FileImage, File, Eye, Share2, Trash2, Download, Move, Heart } from 'lucide-react';
 import { formatBytes, getAbsoluteFileUrl } from './DocumentCard';
+import { forceDownload } from '../utils/downloadHelper';
 
-const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumentClick }) => {
+const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumentClick, onToggleFavorite }) => {
   const getFileIcon = (doc) => {
     const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(doc.fileType?.toLowerCase()) || 
                     /\.(jpg|jpeg|png)$/i.test(doc.filename);
@@ -36,13 +37,7 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
 
   const handleDownload = (doc) => {
     const fileUrl = getAbsoluteFileUrl(doc.cloudUrl);
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = doc.filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    forceDownload(fileUrl, doc.filename);
   };
 
   return (
@@ -95,10 +90,23 @@ const DocumentList = ({ documents, onShare, onDelete, onMove, loading, onDocumen
                     className="doc-actions-inline"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onToggleFavorite) onToggleFavorite(doc.id);
+                      }}
+                      className="doc-btn-inline"
+                      title={doc.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      aria-label="Toggle favorite"
+                      data-tooltip="Favorite"
+                      style={{ color: doc.isFavorite ? 'var(--primary)' : 'inherit' }}
+                    >
+                      <Heart size={15} fill={doc.isFavorite ? 'currentColor' : 'none'} />
+                    </button>
                     <button
                       onClick={() => onDocumentClick(doc)}
                       className="doc-btn-inline"
-                      title="Preview"
+                      title="Preview Document"
                       aria-label="Preview document"
                       data-tooltip="Preview"
                     >

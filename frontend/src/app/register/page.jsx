@@ -130,7 +130,7 @@ const Register = () => {
             <input
               type="password"
               className="form-input"
-              placeholder="Minimum 12 characters (passphrases welcome)"
+              placeholder="Minimum 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -147,15 +147,7 @@ const Register = () => {
           </button>
         </form>
 
-        <button
-          type="button"
-          className="btn btn-secondary btn-full"
-          style={{ marginTop: '14px' }}
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-        >
-          Sign up with Google Account
-        </button>
+
 
         <div className="auth-footer">
           Already have an account?{' '}

@@ -1,7 +1,8 @@
 "use client";
 
 import React from 'react';
-import { FileText, FileImage, File, Share2, Trash2, Download, Move } from 'lucide-react';
+import { FileText, FileImage, File, Share2, Trash2, Download, Move, Heart } from 'lucide-react';
+import { forceDownload } from '../utils/downloadHelper';
 
 export const formatBytes = (bytes, decimals = 2) => {
   if (!bytes || bytes === 0) return '0 Bytes';
@@ -25,7 +26,7 @@ export const getAbsoluteFileUrl = (url) => {
   return `${cleanBase}${cleanPath}`;
 };
 
-const DocumentCard = ({ doc, onShare, onDelete, onMove }) => {
+const DocumentCard = ({ doc, onShare, onDelete, onMove, onToggleFavorite }) => {
   const isImage = ['image/jpeg', 'image/png', 'image/jpg'].includes(doc.fileType?.toLowerCase()) || 
                   /\.(jpg|jpeg|png)$/i.test(doc.filename);
   const isPdf = doc.fileType?.includes('pdf') || /\.pdf$/i.test(doc.filename);
@@ -71,13 +72,7 @@ const DocumentCard = ({ doc, onShare, onDelete, onMove }) => {
   const fileUrl = getAbsoluteFileUrl(doc.cloudUrl);
 
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = doc.filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    forceDownload(fileUrl, doc.filename);
   };
 
   return (
@@ -95,6 +90,17 @@ const DocumentCard = ({ doc, onShare, onDelete, onMove }) => {
       </div>
 
       <div className="doc-actions">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onToggleFavorite) onToggleFavorite(doc.id);
+          }}
+          className="doc-btn"
+          title={doc.isFavorite ? "Remove from favorites" : "Add to favorites"}
+          style={{ color: doc.isFavorite ? 'var(--primary)' : 'inherit' }}
+        >
+          <Heart size={15} fill={doc.isFavorite ? 'currentColor' : 'none'} />
+        </button>
         <button 
           onClick={handleDownload}
           className="doc-btn" 

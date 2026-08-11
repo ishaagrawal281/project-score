@@ -47,13 +47,17 @@ class Document {
    * @param {number} filterOptions.offset
    * @returns {Promise<Array>} List of documents
    */
-  static async findByUser({ userId, folderId, search, limit, offset }) {
+  static async findByUser({ userId, folderId, search, isFavorite, limit, offset }) {
     const where = {
       userId: parseInt(userId, 10)
     };
 
     if (folderId) {
       where.folderId = parseInt(folderId, 10);
+    }
+
+    if (isFavorite) {
+      where.isFavorite = true;
     }
 
     if (search) {
@@ -79,13 +83,17 @@ class Document {
    * @param {string|null} filterOptions.search
    * @returns {Promise<number>} Total count
    */
-  static async countByUser({ userId, folderId, search }) {
+  static async countByUser({ userId, folderId, search, isFavorite }) {
     const where = {
       userId: parseInt(userId, 10)
     };
 
     if (folderId) {
       where.folderId = parseInt(folderId, 10);
+    }
+
+    if (isFavorite) {
+      where.isFavorite = true;
     }
 
     if (search) {
@@ -110,6 +118,20 @@ class Document {
     const document = await db.document.update({
       where: { id: parseInt(id, 10) },
       data: { folderId: parseInt(folderId, 10) }
+    });
+    return !!document;
+  }
+
+  /**
+   * Toggle a document's favorite status.
+   * @param {number} id
+   * @param {boolean} isFavorite
+   * @returns {Promise<boolean>} Success state
+   */
+  static async toggleFavorite(id, isFavorite) {
+    const document = await db.document.update({
+      where: { id: parseInt(id, 10) },
+      data: { isFavorite }
     });
     return !!document;
   }

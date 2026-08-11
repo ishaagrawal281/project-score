@@ -2,20 +2,23 @@
  * Modern NIST-aligned Password Validator
  * 
  * Rules:
- * - Minimum 12 characters (allow passphrases, unicode, spaces, max 128 chars)
+ * - Minimum 8 characters (allow passphrases, unicode, spaces, max 128 chars)
  * - No arbitrary composition rules (no mandatory uppercase/symbol requirements)
  * - Block common/breached passwords
  * - Block obvious user information (name, username/email local-part, app name)
  */
 
 const COMMON_PASSWORDS = new Set([
-  '123456789012',
-  '1234567890123',
+  '12345678',
+  '123456789',
+  'password',
+  'password123',
   'password1234',
-  'password12345',
-  'qwertyuiop12',
+  'qwerty12',
+  'qwertyui',
   'qwerty123456',
-  'admin12345678',
+  'admin123',
+  'admin12345',
   'administrator',
   'welcome12345',
   'welcome123456',
@@ -48,9 +51,9 @@ const validatePassword = (password, context = {}) => {
     return 'Enter a password.';
   }
 
-  // Length check: minimum 12 characters
-  if (password.length < 12) {
-    return 'Password must be at least 12 characters.';
+  // Length check: minimum 8 characters
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters.';
   }
 
   // Maximum safe limit

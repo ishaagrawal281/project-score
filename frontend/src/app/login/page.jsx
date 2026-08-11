@@ -133,15 +133,7 @@ const LoginContent = () => {
           </button>
         </form>
 
-        <button
-          type="button"
-          className="btn btn-secondary btn-full"
-          style={{ marginTop: '14px' }}
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-        >
-          Continue with Google
-        </button>
+
 
         <div className="auth-footer">
           Don't have an account?{' '}

@@ -50,11 +50,13 @@ const uploadDocument = async (req, res, next) => {
 const getDocuments = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { folderId, search } = req.query;
+    const { folderId, search, favorites } = req.query;
 
     const page = parseInt(req.query.page || '1', 10);
     const limit = parseInt(req.query.limit || '20', 10);
     const offset = (page - 1) * limit;
+
+    const isFavorite = favorites === 'true';
 
     const parsedFolderId = folderId ? parseInt(folderId, 10) : null;
 
@@ -70,6 +72,7 @@ const getDocuments = async (req, res, next) => {
       userId,
       folderId: parsedFolderId,
       search: search ? search.trim() : null,
+      isFavorite,
       limit,
       offset
     });
@@ -77,7 +80,8 @@ const getDocuments = async (req, res, next) => {
     const totalDocs = await Document.countByUser({
       userId,
       folderId: parsedFolderId,
-      search: search ? search.trim() : null
+      search: search ? search.trim() : null,
+      isFavorite
     });
 
     return res.status(200).json({
@@ -163,9 +167,39 @@ const moveDocument = async (req, res, next) => {
   }
 };
 
+/**
+ * Toggle favorite status of a document.
+ */
+const toggleFavoriteDocument = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isFavorite } = req.body;
+    const userId = req.user.id;
+
+    const document = await Document.findById(id);
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found.' });
+    }
+
+    if (document.userId !== userId) {
+      return res.status(403).json({ error: 'Permission denied.' });
+    }
+
+    await Document.toggleFavorite(id, isFavorite);
+
+    return res.status(200).json({
+      message: 'Document favorite status updated.',
+      document: { ...document, isFavorite }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   uploadDocument,
   getDocuments,
   deleteDocument,
-  moveDocument
+  moveDocument,
+  toggleFavoriteDocument
 };

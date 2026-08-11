@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download, Share2, Move, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAbsoluteFileUrl, formatBytes } from './DocumentCard';
+import { forceDownload } from '../utils/downloadHelper';
 
 const DocumentViewer = ({ doc, onClose, onShare, onMove, onDelete, allDocuments = [] }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -163,17 +164,14 @@ const DocumentViewer = ({ doc, onClose, onShare, onMove, onDelete, allDocuments 
             <span className="viewer-date">Uploaded on {uploadDate}</span>
           </div>
           <div className="viewer-actions">
-            <a 
-              href={currentFileUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <button 
               className="viewer-action-btn"
-              download={currentDoc.filename}
+              onClick={() => forceDownload(currentFileUrl, currentDoc.filename)}
               title="Download"
             >
               <Download size={18} />
               <span>Download</span>
-            </a>
+            </button>
             <button className="viewer-action-btn" onClick={onClose} title="Close preview">
               <X size={18} />
               <span>Close</span>
