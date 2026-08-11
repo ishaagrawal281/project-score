@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { signIn, useSession } from 'next-auth/react';
 import { HardDrive, AlertTriangle, Loader } from 'lucide-react';
+import { validatePassword } from '../../utils/passwordValidator';
 
 const Register = () => {
   const { signup } = useAuth();
@@ -27,23 +28,19 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !password) {
-      setErrorMsg('All fields are required.');
+    if (!name.trim()) {
+      setErrorMsg('Full name is required.');
       return;
     }
 
-    if (password.length < 8) {
-      setErrorMsg('Password must be at least 8 characters long.');
+    if (!email.trim()) {
+      setErrorMsg('Email address is required.');
       return;
     }
 
-    if (!/\d/.test(password)) {
-      setErrorMsg('Password must contain at least 1 number.');
-      return;
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-      setErrorMsg('Password must contain at least 1 special character.');
+    const validationError = validatePassword(password, { name, email });
+    if (validationError) {
+      setErrorMsg(validationError);
       return;
     }
 
@@ -133,7 +130,7 @@ const Register = () => {
             <input
               type="password"
               className="form-input"
-              placeholder="Min 8 characters (1 number, 1 special char)"
+              placeholder="Minimum 12 characters (passphrases welcome)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

@@ -21,6 +21,7 @@ import {
   Zap,
   Check
 } from 'lucide-react';
+import { validatePassword } from '../../utils/passwordValidator';
 
 const formatBytes = (bytes, decimals = 1) => {
   if (!bytes || bytes === 0) return '0 B';
@@ -159,23 +160,17 @@ const ProfileContent = () => {
       return;
     }
 
-    if (!newPassword || newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long.');
-      return;
-    }
-
-    if (!/\d/.test(newPassword)) {
-      setPasswordError('New password must contain at least 1 number.');
-      return;
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(newPassword)) {
-      setPasswordError('New password must contain at least 1 special character.');
+    const validationError = validatePassword(newPassword, {
+      name: profileData?.name || user?.name,
+      email: profileData?.email || user?.email
+    });
+    if (validationError) {
+      setPasswordError(validationError);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New password and confirmation do not match.');
+      setPasswordError('Passwords do not match.');
       return;
     }
 
@@ -380,7 +375,7 @@ const ProfileContent = () => {
                     className="form-input"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 8 characters (1 number, 1 special char)"
+                    placeholder="Minimum 12 characters"
                     required
                   />
                 </div>

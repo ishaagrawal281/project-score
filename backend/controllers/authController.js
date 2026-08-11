@@ -3,19 +3,7 @@ const Folder = require('../models/Folder');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { generateJwt } = require('../utils/token');
-
-const validatePassword = (password) => {
-  if (!password || password.length < 8) {
-    return 'Password must be at least 8 characters long.';
-  }
-  if (!/\d/.test(password)) {
-    return 'Password must contain at least 1 number.';
-  }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-    return 'Password must contain at least 1 special character.';
-  }
-  return null;
-};
+const { validatePassword } = require('../utils/passwordValidator');
 
 const createDefaultFolders = async (userId) => {
   const rootFolder = await Folder.create({
@@ -41,7 +29,7 @@ const signup = async (req, res, next) => {
       return res.status(400).json({ error: 'All fields (name, email, password) are required.' });
     }
 
-    const passwordError = validatePassword(password);
+    const passwordError = validatePassword(password, { name, email });
     if (passwordError) {
       return res.status(400).json({ error: passwordError });
     }
@@ -259,14 +247,17 @@ const updatePassword = async (req, res, next) => {
       return res.status(400).json({ error: 'Both current password and new password are required.' });
     }
 
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      return res.status(400).json({ error: passwordError });
-    }
-
     const userWithPassword = await User.findWithPasswordById(req.user.id);
     if (!userWithPassword) {
       return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    const passwordError = validatePassword(newPassword, {
+      name: userWithPassword.name,
+      email: userWithPassword.email
+    });
+    if (passwordError) {
+      return res.status(400).json({ error: passwordError });
     }
 
     const isMatch = await bcrypt.compare(currentPassword, userWithPassword.password);
