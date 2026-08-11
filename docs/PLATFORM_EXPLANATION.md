@@ -226,7 +226,7 @@ The backend is built with Express 4, providing REST API endpoints, JWT token iss
 flowchart TD
     Req[Incoming HTTP Request] --> CORS[CORS Origin Check]
     CORS --> BP[Body Parsers: express.json & urlencoded]
-    BP --> Static[/uploads Static File Route]
+    BP --> Static["/uploads Static File Route"]
     Static --> Routers[Express Router Pipeline]
     Routers --> R1[authRoutes: /api/signup, /api/login, /api/profile]
     Routers --> R2[folderRoutes: /api/folders]
