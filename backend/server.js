@@ -20,7 +20,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  'https://doc-vault-amber.vercel.app'
+  'https://doc-vault-amber.vercel.app',
+  'https://s116-0726-wipcube-tgnm-digilocker-v.vercel.app'
 ].filter(Boolean);
 
 app.use(cors({
