@@ -1,0 +1,60 @@
+services:
+  # 1. Backend Service
+  - type: web
+    name: docvault-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      # These values must be provided in the Render Dashboard securely during Blueprint creation
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Automatically points to the frontend service we create below to fix CORS
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: docvault-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # 2. Frontend Service
+  - type: web
+    name: docvault-frontend
+    env: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Secure keys to provide in the Dashboard
+      - key: NEXTAUTH_SECRET
+        sync: false
+      # Automatically sets NEXTAUTH_URL to its own public Render URL
+      - key: NEXTAUTH_URL
+        fromService:
+          type: web
+          name: docvault-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+      # Automatically connects the frontend to the backend service we created above
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService:
+          type: web
+          name: docvault-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NEXT_PUBLIC_API_URL
+        value: "${NEXT_PUBLIC_BACKEND_URL}/api"
