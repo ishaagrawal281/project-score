@@ -10,7 +10,9 @@ RUN npm install --production=false
 COPY . .
 
 # Generate Prisma client - set a dummy DATABASE_URL for build time
-RUN DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" \
+    DATABASE_URL_UNPOOLED="postgresql://dummy:dummy@localhost/dummy" \
+    npx prisma generate
 
 EXPOSE 5000
 
