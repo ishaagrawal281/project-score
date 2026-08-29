@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Search, X, SlidersHorizontal, LogOut, HardDrive, ShieldCheck } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { debounce } from '../utils/eventLoopUtils';
 
 const FILTER_KEYS = ['scope', 'folder', 'dateFrom', 'dateTo', 'type', 'size', 'favorites', 'sort'];
 
@@ -16,9 +17,18 @@ const Navbar = ({ folders = [] }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [draftFilters, setDraftFilters] = useState({});
 
+  // Local state for the search input value — allows instant UI feedback
+  // while the actual URL update is debounced via the event loop's macrotask queue
+  const [localSearchValue, setLocalSearchValue] = useState(searchParams?.get('search') || '');
+
   const searchVal = searchParams?.get('search') || '';
   const activeFilters = Object.fromEntries(FILTER_KEYS.map((key) => [key, searchParams?.get(key) || '']));
   const activeFilterEntries = FILTER_KEYS.filter((key) => activeFilters[key] && activeFilters[key] !== 'all');
+
+  // Sync local search value when URL params change externally
+  useEffect(() => {
+    setLocalSearchValue(searchVal);
+  }, [searchVal]);
 
   useEffect(() => {
     if (!showFilters) return undefined;
@@ -39,7 +49,57 @@ const Navbar = ({ folders = [] }) => {
     router.replace(query ? `?${query}` : '/dashboard');
   };
 
-  const handleSearchChange = (event) => updateParams({ search: event.target.value });
+  /**
+   * DEBOUNCED SEARCH — Event Loop Concept Demonstration
+   *
+   * This uses the debounce() utility from eventLoopUtils.js which leverages
+   * the event loop's MACROTASK QUEUE (setTimeout) to delay the URL update.
+   *
+   * WHY DEBOUNCE SEARCH?
+   * Without debounce, every keystroke would:
+   * 1. Update the URL query params
+   * 2. Trigger a React re-render
+   * 3. Fire a new API request to the backend
+   *
+   * With debounce (300ms delay):
+   * 1. Keystroke → setTimeout schedules URL update on macrotask queue
+   * 2. Next keystroke → previous setTimeout is CLEARED, new one scheduled
+   * 3. After 300ms of no typing → the macrotask executes, updating the URL
+   *
+   * EVENT LOOP FLOW:
+   * Keystroke → Call Stack (handleSearchChange) →
+   *   clearTimeout (cancel pending macrotask) →
+   *   setTimeout(updateParams, 300) (schedule new macrotask) →
+   *   Call Stack empty → Browser can repaint →
+   *   ... user keeps typing → repeat above →
+   *   ... 300ms passes with no keystroke →
+   *   Macrotask Queue → updateParams executes → URL updates → re-render
+   */
+  const debouncedUpdateSearch = useMemo(
+    () => debounce((value) => {
+      updateParams({ search: value });
+    }, 300),
+    [searchParams, router]
+  );
+
+  // Cleanup debounce timer on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => debouncedUpdateSearch.cancel();
+  }, [debouncedUpdateSearch]);
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    // Update local state immediately for responsive UI feedback
+    setLocalSearchValue(value);
+    // Debounce the actual URL/API update (via macrotask queue)
+    debouncedUpdateSearch(value);
+  };
+
+  const handleClearSearch = () => {
+    setLocalSearchValue('');
+    debouncedUpdateSearch.cancel();
+    updateParams({ search: '' });
+  };
   const handleOpenFilters = () => {
     setDraftFilters(activeFilters);
     setShowFilters((open) => !open);
@@ -82,8 +142,8 @@ const Navbar = ({ folders = [] }) => {
         <div className="search-controls">
           <div className="search-bar-wrapper">
             <Search size={18} className="search-icon-left" />
-            <input type="search" className="search-input" placeholder="Search documents by file name..." value={searchVal} onChange={handleSearchChange} aria-label="Search documents by file name" />
-            {searchVal && <button className="search-clear-button" onClick={() => updateParams({ search: '' })} aria-label="Clear search"><X size={15} /></button>}
+            <input type="search" className="search-input" placeholder="Search documents by file name..." value={localSearchValue} onChange={handleSearchChange} aria-label="Search documents by file name" />
+            {localSearchValue && <button className="search-clear-button" onClick={handleClearSearch} aria-label="Clear search"><X size={15} /></button>}
           </div>
           <button className={`filters-button${activeFilterEntries.length ? ' filters-button-active' : ''}`} onClick={handleOpenFilters} aria-expanded={showFilters}>
             <SlidersHorizontal size={16} />

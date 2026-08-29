@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { useClientRouter, ROUTES } from '../../hooks/useClientRouter';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -32,6 +33,21 @@ const DashboardContent = () => {
   const { token } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  /**
+   * CLIENT-SIDE ROUTING — useClientRouter Hook
+   *
+   * This custom hook centralizes all client-side routing operations.
+   * Instead of calling router.push() directly throughout the component,
+   * we use navigateTo(), updateQueryParams(), and getQueryParam().
+   *
+   * Benefits:
+   * - Route paths are constants (ROUTES.DASHBOARD, ROUTES.LOGIN)
+   * - Query param management is abstracted (updateQueryParams)
+   * - Navigation logic is testable and reusable
+   */
+  const clientRouter = useClientRouter();
+
   const searchQuery = searchParams?.get('search') || '';
   const folderFilter = searchParams?.get('folder') || '';
   const dateFrom = searchParams?.get('dateFrom') || '';
@@ -78,7 +94,8 @@ const DashboardContent = () => {
         headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
       });
       if (res.status === 401) {
-        window.location.href = '/login?expired=true';
+        // CLIENT-SIDE ROUTING: Navigate to login with query param using route constant
+        clientRouter.navigateTo(`${ROUTES.LOGIN}?expired=true`);
         return;
       }
       if (!res.ok) {
@@ -120,7 +137,8 @@ const DashboardContent = () => {
       });
 
       if (res.status === 401) {
-        window.location.href = '/login?expired=true';
+        // CLIENT-SIDE ROUTING: Use route constant instead of hardcoded string
+        clientRouter.navigateTo(`${ROUTES.LOGIN}?expired=true`);
         return;
       }
 
@@ -403,7 +421,8 @@ const DashboardContent = () => {
         folders={folders}
         activeFolderId={currentFolderId}
         onSelectFolder={(folderId) => {
-          if (favoritesOnly) router.push('/dashboard');
+          // CLIENT-SIDE ROUTING: Use navigateTo with route constants
+          if (favoritesOnly) clientRouter.navigateTo(ROUTES.DASHBOARD);
           setCurrentFolderId(folderId);
         }}
         onNewFolder={handleNewFolder}
@@ -412,7 +431,8 @@ const DashboardContent = () => {
         loading={foldersLoading}
         isFavoritesActive={favoritesOnly}
         onSelectFavorites={() => {
-          router.push(favoritesOnly ? '/dashboard' : '/dashboard?favorites=true');
+          // CLIENT-SIDE ROUTING: Toggle favorites filter via URL query params
+          clientRouter.navigateTo(favoritesOnly ? ROUTES.DASHBOARD : `${ROUTES.DASHBOARD}?favorites=true`);
           setCurrentFolderId(null);
         }}
       />
