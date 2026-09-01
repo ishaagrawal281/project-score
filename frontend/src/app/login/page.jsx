@@ -12,6 +12,15 @@ const LoginContent = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  /**
+   * CLIENT-SIDE ROUTING NOTE: Return-to-intended-page
+   *
+   * The ?next= query parameter is set by middleware.ts or ProtectedRoute.jsx
+   * when redirecting unauthenticated users to /login. After successful login,
+   * we redirect to this path instead of always landing on /dashboard.
+   */
+  const nextUrl = searchParams?.get('next') || '/dashboard';
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,9 +33,9 @@ const LoginContent = () => {
 
   useEffect(() => {
     if (status === 'authenticated' && session?.accessToken) {
-      router.push('/dashboard');
+      router.push(nextUrl);
     }
-  }, [status, session, router]);
+  }, [status, session, router, nextUrl]);
 
   useEffect(() => {
     if (session?.error === 'GoogleAccountLinkingFailed') {
@@ -48,7 +57,7 @@ const LoginContent = () => {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      router.push(nextUrl);
     } catch (err) {
       setErrorMsg(err.message || 'Login failed. Please check your credentials.');
     } finally {
@@ -59,7 +68,7 @@ const LoginContent = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setErrorMsg('');
-    await signIn('google', { callbackUrl: '/dashboard' }, { prompt: 'select_account' });
+    await signIn('google', { callbackUrl: nextUrl }, { prompt: 'select_account' });
   };
 
   if (status === 'loading') {
