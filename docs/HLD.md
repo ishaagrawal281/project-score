@@ -646,6 +646,8 @@ graph TB
 | `CLOUDINARY_API_KEY` | Backend | No | — |
 | `CLOUDINARY_API_SECRET` | Backend | No | — |
 | `GOOGLE_CLIENT_ID` | Backend | For Google OAuth | — |
+| `GOOGLE_CLIENT_SECRET` | Frontend | For Google OAuth | — |
 | `NEXT_PUBLIC_BACKEND_URL` | Frontend | No | `http://localhost:5000` |
+| `NEXT_PUBLIC_API_URL` | Frontend | No | `${NEXT_PUBLIC_BACKEND_URL}/api` |
 | `NEXTAUTH_SECRET` | Frontend | **Yes** | — |
 | `NEXTAUTH_URL` | Frontend | **Yes** | `http://localhost:3000` |

@@ -162,6 +162,10 @@ CREATE TABLE IF NOT EXISTS documents (
     file_type   VARCHAR(255) NOT NULL,               -- MIME type (e.g., "application/pdf", "image/jpeg")
     size        INT          NOT NULL,               -- File size in bytes (max 10,485,760 = 10 MB)
     is_favorite BOOLEAN      NOT NULL DEFAULT FALSE,  -- User-toggled favorite flag
+    -- NOTE: This column is defined in schema.prisma (as isFavorite) but was NOT
+    -- included in the initial migration (20260710165052_init). If the database was
+    -- provisioned using migrations only (not prisma db push), this column may not
+    -- exist. Run `npx prisma db push` or create a manual migration to reconcile.
     uploaded_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Upload timestamp
     updated_at  TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Last modification timestamp
 

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 import { signIn, useSession } from 'next-auth/react';
@@ -12,6 +12,8 @@ const Register = () => {
   const { signup } = useAuth();
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams?.get('next') || '/dashboard';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,9 +23,9 @@ const Register = () => {
 
   useEffect(() => {
     if (status === 'authenticated' && session) {
-      router.push('/dashboard');
+      router.push(nextUrl);
     }
-  }, [status, session, router]);
+  }, [status, session, router, nextUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,7 +51,7 @@ const Register = () => {
 
     try {
       await signup(name, email, password);
-      router.push('/dashboard');
+      router.push(nextUrl);
     } catch (err) {
       setErrorMsg(err.message || 'Registration failed. Please try again.');
     } finally {
@@ -60,7 +62,7 @@ const Register = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setErrorMsg('');
-    await signIn('google', { callbackUrl: '/dashboard' }, { prompt: 'select_account' });
+    await signIn('google', { callbackUrl: nextUrl }, { prompt: 'select_account' });
   };
 
   if (status === 'loading') {
@@ -160,4 +162,10 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="auth-container">Loading...</div>}>
+      <Register />
+    </Suspense>
+  );
+}
